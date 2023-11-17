@@ -17,12 +17,10 @@ RUN mvn clean install
 FROM openjdk:17
 
 # Copy the JAR file from the builder stage
-COPY --from=builder /usr/src/myapp/target/log-ingestor-0.0.1-SNAPSHOT.jar /usr/app/log-ingestor.jar
+COPY --from=builder /usr/src/myapp/target/log-ingestor-0.0.1-SNAPSHOT.jar /usr/app/app.jar
 
 # Set the working directory
 WORKDIR /usr/app
 
 # Set the entry point to run the jar
-ENTRYPOINT ["/usr/app/wait-for-postgres.sh", "postgres:5432", "myuser", "mypassword", "metadataDB", "java", "-jar", "log-ingestor.jar"]
-
-#ENTRYPOINT ["java","-jar","log-ingestor.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
