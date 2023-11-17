@@ -17,10 +17,10 @@ RUN mvn clean install
 FROM openjdk:17
 
 # Copy the JAR file from the builder stage
-COPY --from=builder /usr/src/myapp/target/query-interface-0.0.1-SNAPSHOT.jar /usr/app/app.jar
+COPY --from=builder /usr/src/myapp/target/query-interface-0.0.1-SNAPSHOT.jar /usr/app/query-interface.jar
 
 # Set the working directory
 WORKDIR /usr/app
 
 # Set the entry point to run the jar
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java","-jar","query-interface.jar"]

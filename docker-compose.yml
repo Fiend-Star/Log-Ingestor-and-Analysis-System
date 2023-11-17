@@ -86,6 +86,7 @@ services:
       context: ./Backend/log-ingestor
     ports:
       - "3000:3000"
+    command: [ "./wait-for-postgres.sh", "postgres:5432", "myuser", "mypassword", "metadataDB", "java", "-jar", "log-ingestor.jar" ]
     depends_on:
       - scylla-node1
       - scylla-node2
@@ -98,6 +99,7 @@ services:
   query-interface:
     build:
       context: ./Backend/query-interface
+    command: [ "./wait-for-postgres.sh", "postgres:5432", "myuser", "mypassword", "metadataDB", "java", "-jar", "query-interface.jar" ]
     ports:
       - "4000:4000"
     depends_on:
