@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  scylla-node1:
+    image: scylladb/scylla
+    container_name: scylla-node1
+    volumes:
+      - /var/lib/scylla/data1:/var/lib/scylla/data
+      - /var/lib/scylla/commitlog1:/var/lib/scylla/commitlog
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
+
+  scylla-node2:
+    image: scylladb/scylla
+    container_name: scylla-node2
+    command: --seeds=scylla-node1
+    volumes:
+      - /var/lib/scylla/data2:/var/lib/scylla/data
+      - /var/lib/scylla/commitlog2:/var/lib/scylla/commitlog
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
+
+  scylla-node3:
+    image: scylladb/scylla
+    container_name: scylla-node3
+    command: --seeds=scylla-node1
+    volumes:
+      - /var/lib/scylla/data3:/var/lib/scylla/data
+      - /var/lib/scylla/commitlog3:/var/lib/scylla/commitlog
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: myuser # change to your actual user
+      POSTGRES_PASSWORD: mypassword # change to your actual password
+      POSTGRES_DB: metadataDB
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+
+  kafka:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+
+  log-ingestor:
+    build:
+      context: ./backend/log-ingestor
+    ports:
+      - "3000:3000"
+    depends_on:
+      - scylla-node1
+      - scylla-node2
+      - scylla-node3
+      - postgres
+
+  query-interface:
+    build:
+      context: ./backend/query-interface
+    ports:
+      - "4000:4000"
+    depends_on:
+      - scylla-node1
+      - scylla-node2
+      - scylla-node3
+      - postgres
+
+  frontend:
+    build: ./frontend/my-app
+    ports:
+      - "3001:3001"
+    depends_on:
+      - log-ingestor
+      - query-interface
+#
+#networks:
+#  default:
+#    driver: bridge
