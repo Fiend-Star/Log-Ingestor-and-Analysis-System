@@ -1,20 +1,28 @@
-# Use JDK 17
+# Stage 1: Build with Maven
+FROM maven:3.8.4-openjdk-17 as builder
+
+# Copy your project's source code into the Docker image
+COPY . /usr/src/myapp
+
+# List the contents of the /usr/src/myapp directory to verify the copy
+RUN ls -lrt /usr/src/myapp
+
+# Set the working directory
+WORKDIR /usr/src/myapp
+
+# Run Maven install to build your application
+RUN mvn clean install
+
+# Stage 2: Setup the runtime environment
 FROM openjdk:17
 
-# Add Maintainer Info
-LABEL maintainer="your-email@example.com"
+# Copy the JAR file from the builder stage
+COPY --from=builder /usr/src/myapp/target/log-ingestor-0.0.1-SNAPSHOT.jar /usr/app/log-ingestor.jar
 
-# Add a volume pointing to /tmp
-VOLUME /tmp
+# Set the working directory
+WORKDIR /usr/app
 
-# Make port 8080 available to the world outside this container
-EXPOSE 8080
+# Set the entry point to run the jar
+ENTRYPOINT ["/usr/app/wait-for-postgres.sh", "postgres:5432", "myuser", "mypassword", "metadataDB", "java", "-jar", "log-ingestor.jar"]
 
-# The application's jar file
-ARG JAR_FILE=target/myapp.jar
-
-# Add the application's jar to the container
-ADD ${JAR_FILE} myapp.jar
-
-# Run the jar file
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/myapp.jar"]
+#ENTRYPOINT ["java","-jar","log-ingestor.jar"]
