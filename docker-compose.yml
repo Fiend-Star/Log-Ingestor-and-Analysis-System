@@ -8,50 +8,98 @@ services:
       - '2181:2181'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    healthcheck:
+      test: [ "CMD", "echo", "ruok", "|", "nc", "localhost", "2181", "|", "grep", "imok" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   scylla-node1:
     image: scylladb/scylla
     container_name: scylla-node1
+    privileged: true
     volumes:
-      - /var/lib/scylla/data1:/var/lib/scylla/data
-      - /var/lib/scylla/commitlog1:/var/lib/scylla/commitlog
-    deploy:
-      resources:
-        limits:
-          memory: 1500M
+      - scylla-data1:/var/lib/scylla/data
+      - scylla-commitlog1:/var/lib/scylla/commitlog
+      - ./scylla.yaml:/conf/scylla.yaml
+      - ./init_scylla.sh:/init_scylla.sh
+    entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 4G
+#          cpus: '2'
+    command: "--overprovisioned 1"#"--smp 2 --memory 4G "#--overprovisioned 1"
+    healthcheck:
+      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN\\s+'" ]
+      interval: 180s
+      timeout: 30s
+      retries: 3
 
   scylla-node2:
     image: scylladb/scylla
     container_name: scylla-node2
-    command: --seeds=scylla-node1
+    privileged: true
+    command: >
+      /bin/bash -c "
+      echo 1048576 > /proc/sys/fs/aio-max-nr &&
+      scylla_io_setup &&
+      exec /usr/bin/scylla --memory 2G --smp 1 --overprovisioned 1 --seeds 'scylla-node1'
+      "
     volumes:
-      - /var/lib/scylla/data2:/var/lib/scylla/data
-      - /var/lib/scylla/commitlog2:/var/lib/scylla/commitlog
+      - scylla-data2:/var/lib/scylla/data
+      - scylla-commitlog2:/var/lib/scylla/commitlog
     deploy:
       resources:
         limits:
-          memory: 1500M
+          memory: 2G
+          cpus: '1'
+    healthcheck:
+      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN\\s+'" ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   scylla-node3:
     image: scylladb/scylla
     container_name: scylla-node3
-    command: --seeds=scylla-node1
+    privileged: true
+    command: >
+      /bin/bash -c "
+      echo 1048576 > /proc/sys/fs/aio-max-nr &&
+      scylla_io_setup &&
+      exec /usr/bin/scylla --memory 2G --smp 1 --overprovisioned 1 --seeds 'scylla-node1'
+      "
     volumes:
-      - /var/lib/scylla/data3:/var/lib/scylla/data
-      - /var/lib/scylla/commitlog3:/var/lib/scylla/commitlog
+      - scylla-data3:/var/lib/scylla/data
+      - scylla-commitlog3:/var/lib/scylla/commitlog
     deploy:
       resources:
         limits:
-          memory: 1500M
+          memory: 2G
+          cpus: '1'
+    healthcheck:
+      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN\\s+'" ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   postgres:
     image: postgres
+    command: ["postgres", "-c", "port=5431"]
     environment:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: metadataDB
+    ports:
+      - '5431:5431'
     volumes:
-      - /var/lib/postgresql/data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U myuser -d metadataDB -p 5431" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   elasticsearch:
     image: elasticsearch:8.11.1
@@ -60,7 +108,13 @@ services:
     ports:
       - "9200:9200"
     volumes:
-      - /var/lib/elasticsearch/data:/usr/share/elasticsearch/data
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
 
   kafka:
     image: 'bitnami/kafka:latest'
@@ -73,39 +127,69 @@ services:
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
+    healthcheck:
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server=localhost:9092" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   log-ingestor:
     build:
       context: ./Backend/log-ingestor
     ports:
       - "3000:3000"
+    volumes:
+      - ./Backend/log-ingestor:/usr/src/myapp
     depends_on:
-      - scylla-node1
-      - scylla-node2
-      - scylla-node3
-      - postgres
-      - kafka
-      - elasticsearch
-      - redis
+      postgres:
+        condition: service_healthy
+      scylla-node1:
+        condition: service_healthy
+      scylla-node2:
+        condition: service_healthy
+      scylla-node3:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 
   query-interface:
     build:
       context: ./Backend/query-interface
     ports:
       - "4000:4000"
+    volumes:
+      - ./Backend/query-interface:/usr/src/myapp
     depends_on:
-      - scylla-node1
-      - scylla-node2
-      - scylla-node3
-      - postgres
-      - kafka
-      - elasticsearch
-      - redis
+      postgres:
+        condition: service_healthy
+      scylla-node1:
+        condition: service_healthy
+      scylla-node2:
+        condition: service_healthy
+      scylla-node3:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   frontend:
     build: ./Frontend/my-app
@@ -115,7 +199,16 @@ services:
       - log-ingestor
       - query-interface
 
-# Uncomment to define a custom network
-# networks:
-#   default:
-#     driver: bridge
+volumes:
+  scylla-data1:
+  scylla-data2:
+  scylla-data3:
+  scylla-commitlog1:
+  scylla-commitlog2:
+  scylla-commitlog3:
+  postgres-data:
+  elasticsearch-data:
+
+networks:
+  custom_network:
+    driver: bridge
