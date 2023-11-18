@@ -4,4 +4,4 @@ rpc_address: scylla-node3
 seed_provider:
   - class_name: org.apache.cassandra.locator.SimpleSeedProvider
     parameters:
-      - seeds: "scylla-node1,scylla-node2,scylla-node3"
+      - seeds: "scylla-node1,scylla-node2"#,scylla-node3"

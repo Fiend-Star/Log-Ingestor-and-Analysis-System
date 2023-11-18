@@ -12,60 +12,84 @@ services:
       - custom_network
     healthcheck:
       test: [ "CMD", "echo", "ruok", "|", "nc", "localhost", "2181", "|", "grep", "imok" ]
-      interval: 30s
+      interval: 20s
       timeout: 10s
-      retries: 3
+      retries: 5
 
   scylla-node1:
-    image: scylladb/scylla
+    image: scylladb/scylla:5.1.0
     container_name: scylla-node1
     restart: on-failure
     privileged: true
+    ports:
+      - "9042:9042"
+    command: --seeds=scylla-node1,scylla-node2 --smp 1 --memory 750M --overprovisioned 1 --api-address 0.0.0.0
+    #    command: --smp 3 --memory 11G --overprovisioned 1
     volumes:
       - scylla-data1:/var/lib/scylla/data
       - scylla-commitlog1:/var/lib/scylla/commitlog
-      - ./scylla-node1.yaml:/conf/scylla.yaml
+      - ./scylla/cassandra-rackdc.properties.dc1:/conf/cassandra-rackdc.properties
+      - ./scylla/scylla.yaml:/conf/scylla.yaml
       - ./init_scylla.sh:/init_scylla.sh
     entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
-    command: "--overprovisioned 1"#"--smp 2 --memory 4G "#--overprovisioned 1"
     networks:
       - custom_network
+#    environment:
+#      - CLUSTER_NAME='MyScyllaCluster'
+#      - LISTEN_ADDRESS='localhost'
+#      - RPC_ADDRESS='localhost:7000'
+#      - SEEDS='scylla-node1'
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
       timeout: 60s
       retries: 10
+    depends_on:
+      kafka:
+        condition: service_healthy
 
   scylla-node2:
-    image: scylladb/scylla
+    image: scylladb/scylla:5.1.0
     container_name: scylla-node2
+    restart: on-failure
     privileged: true
+    command: --seeds=scylla-node1,scylla-node2 --smp 1 --memory 750M --overprovisioned 1 --api-address 0.0.0.0
     volumes:
       - scylla-data2:/var/lib/scylla/data
       - scylla-commitlog2:/var/lib/scylla/commitlog
-      - ./scylla-node2.yaml:/conf/scylla.yaml
+      - ./scylla/cassandra-rackdc.properties.dc1:/conf/cassandra-rackdc.properties
+      - ./scylla/scylla.yaml:/conf/scylla.yaml
       - ./init_scylla.sh:/init_scylla.sh
     entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
-    command: "--overprovisioned 1"#"--smp 2 --memory 4G "#--overprovisioned 1"
     networks:
       - custom_network
+#    environment:
+#      - CLUSTER_NAME='MyScyllaCluster'
+#      - LISTEN_ADDRESS='localhost'
+#      - RPC_ADDRESS='localhost:7001'
+#      - SEEDS='scylla-node1'
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
       timeout: 60s
       retries: 10
+    depends_on:
+      kafka:
+        condition: service_healthy
 
   scylla-node3:
-    image: scylladb/scylla
+    image: scylladb/scylla:5.1.0
     container_name: scylla-node3
+    restart: on-failure
     privileged: true
+    command: --seeds=scylla-node1,scylla-node2 --smp 1 --memory 750M --overprovisioned 1 --api-address 0.0.0.0
     volumes:
       - scylla-data3:/var/lib/scylla/data
       - scylla-commitlog3:/var/lib/scylla/commitlog
-      - ./scylla-node3.yaml:/conf/scylla.yaml
+      - ./scylla/cassandra-rackdc.properties.dc1:/conf/cassandra-rackdc.properties
+      - ./scylla/scylla.yaml:/conf/scylla.yaml
       - ./init_scylla.sh:/init_scylla.sh
     entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
-    command: "--overprovisioned 1"#"--smp 2 --memory 4G "#--overprovisioned 1"
     networks:
       - custom_network
     healthcheck:
@@ -73,6 +97,9 @@ services:
       interval: 30s
       timeout: 60s
       retries: 10
+    depends_on:
+      kafka:
+        condition: service_healthy
 
   postgres:
     image: postgres
@@ -108,8 +135,8 @@ services:
       - custom_network
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9205/_cluster/health || exit 1" ]
-      interval: 30s
-      timeout: 35s
+      interval: 15s
+      timeout: 15s
       retries: 5
 
 
@@ -162,8 +189,8 @@ services:
         condition: service_healthy
       scylla-node2:
         condition: service_healthy
-      scylla-node3:
-        condition: service_healthy
+      #scylla-node3:
+      #  condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
@@ -188,8 +215,8 @@ services:
         condition: service_healthy
       scylla-node2:
         condition: service_healthy
-      scylla-node3:
-        condition: service_healthy
+      #scylla-node3:
+      #  condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
