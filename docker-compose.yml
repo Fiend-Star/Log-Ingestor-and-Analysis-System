@@ -13,8 +13,8 @@ services:
     image: scylladb/scylla
     container_name: scylla-node1
     volumes:
-      - /var/lib/scylla/data1:/var/lib/scylla/data
-      - /var/lib/scylla/commitlog1:/var/lib/scylla/commitlog
+      - scylla-data1:/var/lib/scylla/data
+      - scylla-commitlog1:/var/lib/scylla/commitlog
     deploy:
       resources:
         limits:
@@ -25,8 +25,8 @@ services:
     container_name: scylla-node2
     command: --seeds=scylla-node1
     volumes:
-      - /var/lib/scylla/data2:/var/lib/scylla/data
-      - /var/lib/scylla/commitlog2:/var/lib/scylla/commitlog
+      - scylla-data2:/var/lib/scylla/data
+      - scylla-commitlog2:/var/lib/scylla/commitlog
     deploy:
       resources:
         limits:
@@ -37,8 +37,8 @@ services:
     container_name: scylla-node3
     command: --seeds=scylla-node1
     volumes:
-      - /var/lib/scylla/data3:/var/lib/scylla/data
-      - /var/lib/scylla/commitlog3:/var/lib/scylla/commitlog
+      - scylla-data3:/var/lib/scylla/data
+      - scylla-commitlog3:/var/lib/scylla/commitlog
     deploy:
       resources:
         limits:
@@ -47,11 +47,27 @@ services:
   postgres:
     image: postgres
     environment:
-      POSTGRES_USER: myuser # change to your actual user
-      POSTGRES_PASSWORD: mypassword # change to your actual password
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: metadataDB
+    ports:
+      - '5432:5432'
     volumes:
-      - /var/lib/postgresql/data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U myuser -d metadataDB" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.11.1
+    environment:
+      - "discovery.type=single-node"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
 
   kafka:
     image: 'bitnami/kafka:latest'
@@ -65,20 +81,31 @@ services:
     depends_on:
       - zookeeper
 
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
   log-ingestor:
     build:
-      context: ./backend/log-ingestor
+      context: ./Backend/log-ingestor
     ports:
       - "3000:3000"
     depends_on:
-      - scylla-node1
-      - scylla-node2
-      - scylla-node3
-      - postgres
+      postgres:
+        condition: service_healthy
+#      - scylla-node1
+#      - scylla-node2
+#      - scylla-node3
+#      - kafka
+#      - elasticsearch
+#      - redis
+
 
   query-interface:
     build:
-      context: ./backend/query-interface
+      context: ./Backend/query-interface
+    command: [ "./wait-for-postgres.sh", "postgres:5432", "myuser", "mypassword", "metadataDB", "java", "-jar", "query-interface.jar" ]
     ports:
       - "4000:4000"
     depends_on:
@@ -86,15 +113,24 @@ services:
       - scylla-node2
       - scylla-node3
       - postgres
+      - kafka
+      - elasticsearch
+      - redis
 
   frontend:
-    build: ./frontend/my-app
+    build: ./Frontend/my-app
     ports:
-      - "3001:3001"
+      - "5001:5001"
     depends_on:
       - log-ingestor
       - query-interface
-#
-#networks:
-#  default:
-#    driver: bridge
+
+volumes:
+  scylla-data1:
+  scylla-data2:
+  scylla-data3:
+  scylla-commitlog1:
+  scylla-commitlog2:
+  scylla-commitlog3:
+  postgres-data:
+  elasticsearch-data:
