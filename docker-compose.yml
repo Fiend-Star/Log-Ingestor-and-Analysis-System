@@ -47,7 +47,7 @@ services:
     container_name: scylla-node2
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 1
+    command: --seeds=scylla-node1 --overprovisioned 1 --smp 3
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
@@ -64,7 +64,7 @@ services:
     container_name: scylla-node3
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 1
+    command: --seeds=scylla-node1 --overprovisioned 1 --smp 3
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
