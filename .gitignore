@@ -44,3 +44,4 @@ build/
 
 ### Spring Boot Java ###
 **/target/
+/.idea/

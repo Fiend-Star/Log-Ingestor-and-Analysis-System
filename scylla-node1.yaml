@@ -1,0 +1,7 @@
+cluster_name: 'Test Cluster node1'
+listen_address: scylla-node1
+rpc_address: scylla-node1
+seed_provider:
+  - class_name: org.apache.cassandra.locator.SimpleSeedProvider
+    parameters:
+      - seeds: "scylla-node1,scylla-node2,scylla-node3"

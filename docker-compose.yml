@@ -8,6 +8,8 @@ services:
       - '2181:2181'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - custom_network
     healthcheck:
       test: [ "CMD", "echo", "ruok", "|", "nc", "localhost", "2181", "|", "grep", "imok" ]
       interval: 30s
@@ -17,72 +19,60 @@ services:
   scylla-node1:
     image: scylladb/scylla
     container_name: scylla-node1
+    restart: on-failure
     privileged: true
     volumes:
       - scylla-data1:/var/lib/scylla/data
       - scylla-commitlog1:/var/lib/scylla/commitlog
-      - ./scylla.yaml:/conf/scylla.yaml
+      - ./scylla-node1.yaml:/conf/scylla.yaml
       - ./init_scylla.sh:/init_scylla.sh
     entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 4G
-#          cpus: '2'
     command: "--overprovisioned 1"#"--smp 2 --memory 4G "#--overprovisioned 1"
+    networks:
+      - custom_network
     healthcheck:
-      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN\\s+'" ]
-      interval: 180s
-      timeout: 30s
-      retries: 3
+      test: [ "CMD-SHELL", "nodetool status || exit 1" ]
+      interval: 30s
+      timeout: 60s
+      retries: 10
 
   scylla-node2:
     image: scylladb/scylla
     container_name: scylla-node2
     privileged: true
-    command: >
-      /bin/bash -c "
-      echo 1048576 > /proc/sys/fs/aio-max-nr &&
-      scylla_io_setup &&
-      exec /usr/bin/scylla --memory 2G --smp 1 --overprovisioned 1 --seeds 'scylla-node1'
-      "
     volumes:
       - scylla-data2:/var/lib/scylla/data
       - scylla-commitlog2:/var/lib/scylla/commitlog
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-          cpus: '1'
+      - ./scylla-node2.yaml:/conf/scylla.yaml
+      - ./init_scylla.sh:/init_scylla.sh
+    entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
+    command: "--overprovisioned 1"#"--smp 2 --memory 4G "#--overprovisioned 1"
+    networks:
+      - custom_network
     healthcheck:
-      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN\\s+'" ]
+      test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
-      timeout: 30s
-      retries: 3
+      timeout: 60s
+      retries: 10
 
   scylla-node3:
     image: scylladb/scylla
     container_name: scylla-node3
     privileged: true
-    command: >
-      /bin/bash -c "
-      echo 1048576 > /proc/sys/fs/aio-max-nr &&
-      scylla_io_setup &&
-      exec /usr/bin/scylla --memory 2G --smp 1 --overprovisioned 1 --seeds 'scylla-node1'
-      "
     volumes:
       - scylla-data3:/var/lib/scylla/data
       - scylla-commitlog3:/var/lib/scylla/commitlog
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-          cpus: '1'
+      - ./scylla-node3.yaml:/conf/scylla.yaml
+      - ./init_scylla.sh:/init_scylla.sh
+    entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
+    command: "--overprovisioned 1"#"--smp 2 --memory 4G "#--overprovisioned 1"
+    networks:
+      - custom_network
     healthcheck:
-      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN\\s+'" ]
+      test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
-      timeout: 30s
-      retries: 3
+      timeout: 60s
+      retries: 10
 
   postgres:
     image: postgres
@@ -95,6 +85,8 @@ services:
       - '5431:5431'
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - custom_network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U myuser -d metadataDB -p 5431" ]
       interval: 10s
@@ -105,30 +97,38 @@ services:
     image: elasticsearch:8.11.1
     environment:
       - "discovery.type=single-node"
+      - "http.port=9205"
+      - "xpack.security.enabled=false"  # Disable xpack security
+      - "xpack.security.http.ssl.enabled=false"  # Disable HTTPS
     ports:
-      - "9200:9200"
+      - "9205:9205"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - custom_network
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
-      interval: 20s
-      timeout: 5s
+      test: [ "CMD-SHELL", "curl -f http://localhost:9205/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 35s
       retries: 5
 
 
   kafka:
     image: 'bitnami/kafka:latest'
     ports:
-      - '9092:9092'
+      - '9091:9091'
     environment:
       - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9091
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - custom_network
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server=localhost:9092" ]
+      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server=localhost:9091 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -138,6 +138,8 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+    networks:
+      - custom_network
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
@@ -151,6 +153,8 @@ services:
       - "3000:3000"
     volumes:
       - ./Backend/log-ingestor:/usr/src/myapp
+    networks:
+      - custom_network
     depends_on:
       postgres:
         condition: service_healthy
@@ -175,6 +179,8 @@ services:
       - "4000:4000"
     volumes:
       - ./Backend/query-interface:/usr/src/myapp
+    networks:
+      - custom_network
     depends_on:
       postgres:
         condition: service_healthy
@@ -198,6 +204,8 @@ services:
     depends_on:
       - log-ingestor
       - query-interface
+    networks:
+      - custom_network
 
 volumes:
   scylla-data1:

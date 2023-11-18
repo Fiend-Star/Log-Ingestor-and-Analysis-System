@@ -1,7 +1,0 @@
-cluster_name: 'Test Cluster'
-listen_address: localhost
-rpc_address: localhost
-seed_provider:
-  - class_name: org.apache.cassandra.locator.SimpleSeedProvider
-    parameters:
-      - seeds: "127.0.0.1"
