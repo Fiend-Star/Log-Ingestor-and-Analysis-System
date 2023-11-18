@@ -23,6 +23,6 @@ COPY --from=builder /usr/src/myapp/target/log-ingestor-0.0.1-SNAPSHOT.jar /usr/a
 WORKDIR /usr/app
 
 # Set the entry point to run the jar
-ENTRYPOINT ["/usr/app/wait-for-postgres.sh", "postgres:5432", "myuser", "mypassword", "metadataDB", "java", "-jar", "log-ingestor.jar"]
+ENTRYPOINT ["java", "-jar", "log-ingestor.jar"]
 
 #ENTRYPOINT ["java","-jar","log-ingestor.jar"]
