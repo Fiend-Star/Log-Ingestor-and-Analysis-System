@@ -1,4 +1,4 @@
-# Base image
+# Base image for building
 FROM node:latest as build
 
 # Set working directory
@@ -15,7 +15,16 @@ COPY . ./
 # Build the app
 RUN npm run build
 
-# Nginx to serve the content
+# Nginx to serve the content on port 3001
 FROM nginx:latest
+
+# Copy the built React app to the Nginx directory
 COPY --from=build /app/build /usr/share/nginx/html
-EXPOSE 80
+
+# Update the default Nginx configuration to listen on port 3001
+RUN sed -i 's/80/5001/g' /etc/nginx/nginx.conf
+
+EXPOSE 5001
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

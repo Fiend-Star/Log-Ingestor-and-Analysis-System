@@ -38,6 +38,21 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.scylladb/scylla-driver-core -->
+        <dependency>
+            <groupId>com.scylladb</groupId>
+            <artifactId>scylla-driver-core</artifactId>
+            <version>3.11.5.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.scylladb/scylla-driver-mapping -->
+        <dependency>
+            <groupId>com.scylladb</groupId>
+            <artifactId>scylla-driver-mapping</artifactId>
+            <version>3.11.5.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
