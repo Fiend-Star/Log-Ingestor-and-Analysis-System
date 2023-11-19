@@ -58,6 +58,14 @@
             <version>3.11.5.0</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.25.1</version>
+        </dependency>
+
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -88,6 +96,7 @@
                 </configuration>
             </plugin>
         </plugins>
+
     </build>
 
 </project>

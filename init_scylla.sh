@@ -23,10 +23,12 @@ done
 
 echo "ScyllaDB is now ready."
 
-
+#cqlsh -e "CREATE ROLE IF NOT EXISTS cassandra WITH PASSWORD = 'cassandra' AND LOGIN = TRUE;"
+#
+#cqlsh -e "ALTER ROLE cassandra WITH SUPERUSER = true;"
 
 # Create keyspace
-cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'replication_factor' : 3};"
+cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 3 };"
 
 # Create table
 cqlsh -e "CREATE TABLE IF NOT EXISTS logKeySpace.logs (
