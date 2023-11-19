@@ -1,7 +1,6 @@
 package com.fiendstar.logIngestor.controller;
 
 import com.fiendstar.logIngestor.model.LogEntry;
-import com.fiendstar.logIngestor.model.LogPrimaryKey;
 import com.fiendstar.logIngestor.model.ScyllaDbEntity;
 import com.fiendstar.logIngestor.repository.LogEventRepository;
 import com.fiendstar.logIngestor.service.LogService;
@@ -67,6 +66,24 @@ public class LogController {
         }
     }
 
+    @GetMapping("/log-event")
+    public ResponseEntity<List<ScyllaDbEntity>> getAllLogEvent() {
+        logger.info("getAllLogEvents - Entry into the method");
+
+        try {
+            List<ScyllaDbEntity> events = logEventRepository.findAll();
+
+            if (events.isEmpty()) {
+                logger.info("getAllLogEvents - No content found");
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(events, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error retrieving log events: ", e);
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // GET: Retrieve a single log event by Trace ID
     @GetMapping("/log-events/{traceId}")
     public ResponseEntity<ScyllaDbEntity> getLogEventByTraceId(@PathVariable("traceId") String traceId) {
@@ -80,7 +97,8 @@ public class LogController {
     @PostMapping("/log-events")
     public ResponseEntity<ScyllaDbEntity> createLogEvent(@RequestBody LogEntry logEntry) {
         try {
-            LogPrimaryKey pk = new LogPrimaryKey(logEntry.getTraceId(), logEntry.getSpanId(), logEntry.getTimestamp());
+            // Assuming logEntry is an object from which you're fetching these details
+            ScyllaDbEntity.LogKey pk = new ScyllaDbEntity.LogKey(logEntry.getTraceId(), logEntry.getSpanId(), logEntry.getTimestamp());
             ScyllaDbEntity newLogEvent = new ScyllaDbEntity(pk, logEntry.getLevel(), logEntry.getMessage(), logEntry.getResourceId(), logEntry.getCommit(), logEntry.getMetadata());
             ScyllaDbEntity savedLogEvent = logEventRepository.save(newLogEvent);
             return new ResponseEntity<>(savedLogEvent, HttpStatus.CREATED);
@@ -93,9 +111,10 @@ public class LogController {
     // PUT: Update an existing log event
     @PutMapping("/log-events/{traceId}/{spanId}/{timestamp}")
     public ResponseEntity<ScyllaDbEntity> updateLogEvent(@PathVariable("traceId") String traceId, @PathVariable("spanId") String spanId, @PathVariable("timestamp") String timestamp, @RequestBody LogEntry logEntry) {
-        LogPrimaryKey pk = new LogPrimaryKey(traceId, spanId, timestamp);
 
-        Optional<ScyllaDbEntity> logEventData = logEventRepository.findById(String.valueOf(pk));
+        ScyllaDbEntity.LogKey pk = new ScyllaDbEntity.LogKey(traceId, spanId, timestamp);
+
+        Optional<ScyllaDbEntity> logEventData = logEventRepository.findById(pk);
 
         if (logEventData.isPresent()) {
             ScyllaDbEntity logEventToUpdate = logEventData.get();
@@ -131,8 +150,6 @@ public class LogController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-    // Additional methods for filtering can be added as required
 
 }
 
