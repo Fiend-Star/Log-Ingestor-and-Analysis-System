@@ -8,8 +8,8 @@ Welcome to the Log Analysis System, where data meets dynamism, and logs aren't j
 - [Why These Technologies?](#why-these-technologies)
 - [Architecture Overview](#architecture-overview)
 - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
 - [Usage](#usage)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -51,7 +51,7 @@ Dive into our system's architecture, where every component plays a critical role
 3. Visit the designated ports to witness the magic in action.
 
 ## Usage
-- **Log Ingestor**: Port 3000, where logs are ingested with grace and precision.
+- **Log Ingestor**: Port 3000, where logs are ingested with grace and precision. Capable of handling about 100k writes{post request}, optimized for million reads {get request}.
 - **Query Interface**: Port 4000, your gateway to insightful data queries.
 - **Frontend**: Port 5001, where beauty and functionality converge.
 
@@ -66,13 +66,9 @@ Got ideas? Found bugs? Contributions are not just welcomed, they're celebrated! 
 We welcome and value contributions to this project. By contributing, you agree to the following terms:
 
 1. **License Compatibility**: Your contributions must be compatible with the License under which this project is released.
-
 2. **Ownership**: You assert that you have the necessary rights to contribute the code, including any required permissions or licenses.
-
 3. **Code of Conduct**: You agree to abide by the project's code of conduct and guidelines for contributions, as outlined in [CONTRIBUTING.md](link-to-contributing-guidelines).
-
 4. **Review Process**: Your contributions may be subject to review and may not be automatically accepted into the project.
-
 5. **Non-Commercial Access**: If your contribution is accepted, you will be granted access to this project for non-commercial purposes under the Fair Use License.
 
 ## Contact
