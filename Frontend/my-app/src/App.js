@@ -1,25 +1,29 @@
 import logo from './logo.svg';
 import './App.css';
+import LogView from "./components/LogView";
+import {Link} from 'react-router-dom'; // Import Link component
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <div className="App">
+            {/*<header className="App-header">*/}
+            {/*    <img src={logo} className="App-logo" alt="logo"/>*/}
+            {/*    <p>*/}
+            {/*        Edit <code>src/App.js</code> and save to reload.*/}
+            {/*    </p>*/}
+            {/*    <a*/}
+            {/*        className="App-link"*/}
+            {/*        href="https://reactjs.org"*/}
+            {/*        target="_blank"*/}
+            {/*        rel="noopener noreferrer"*/}
+            {/*    >*/}
+            {/*        Learn React*/}
+            {/*    </a>*/}
+            {/*    <a href="/api/logs" className="App-link">View Logs</a>*/}
+            {/*</header>*/}
+            <LogView route="/api/logs"/>
+        </div>
+    );
 }
 
 export default App;
