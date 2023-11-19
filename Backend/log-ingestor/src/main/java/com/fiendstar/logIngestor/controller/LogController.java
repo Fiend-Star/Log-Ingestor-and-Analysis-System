@@ -26,98 +26,129 @@ public class LogController {
     @Autowired
     private LogService logService;
 
+
     @Autowired
     private LogEventRepository logEventRepository;
 
-    // GET: Retrieve all log events
+    // Retrieve all log events from the database
     @GetMapping
     public ResponseEntity<List<ScyllaDbEntity>> getAllLogEvents() {
-        logger.info("getAllLogEvents - Entry into the method");
+        logger.info("Request to fetch all log events");
 
         try {
             List<ScyllaDbEntity> events = logEventRepository.findAll();
 
             if (events.isEmpty()) {
-                logger.info("getAllLogEvents - No content found");
+                logger.info("No log events found");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
             return new ResponseEntity<>(events, HttpStatus.OK);
         } catch (Exception e) {
-            logger.error("Error retrieving log events: ", e);
+            logger.error("Error retrieving all log events", e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // GET: Retrieve a single log event by Trace ID
-    @GetMapping("/log-events/{traceId}")
+    // Retrieve log events by Trace ID
+    @GetMapping("/{traceId}")
     public ResponseEntity<List<ScyllaDbEntity>> getLogEventsByTraceId(@PathVariable("traceId") String traceId) {
+        logger.info("Request to fetch log events with traceId: {}", traceId);
         try {
-            // Assuming you have a method in your repository to find by traceId
             List<ScyllaDbEntity> logEvents = logEventRepository.findByTraceId(traceId);
             if (logEvents.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
             return new ResponseEntity<>(logEvents, HttpStatus.OK);
         } catch (Exception e) {
+            logger.error("Error fetching log events with traceId: {}", traceId, e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // POST: Create a new log event
+    // Create a new log event
     @PostMapping
     public ResponseEntity<ScyllaDbEntity> createLogEvent(@RequestBody LogEntry logEntry) {
+        logger.info("Request to create a new log event");
         try {
             ScyllaDbEntity.LogKey pk = new ScyllaDbEntity.LogKey(logEntry.getTraceId(), logEntry.getSpanId(), logEntry.getTimestamp());
             ScyllaDbEntity newLogEvent = new ScyllaDbEntity(pk, logEntry.getLevel(), logEntry.getMessage(), logEntry.getResourceId(), logEntry.getCommit(), logEntry.getMetadata());
             ScyllaDbEntity savedLogEvent = logEventRepository.save(newLogEvent);
             return new ResponseEntity<>(savedLogEvent, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.error("Error creating log event: ", e);
+            logger.error("Error creating a new log event", e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // PUT: Update an existing log event
-    @PutMapping("/log-events/{traceId}/{spanId}/{timestamp}")
+    // Update an existing log event
+    @PutMapping("/{traceId}/{spanId}/{timestamp}")
     public ResponseEntity<ScyllaDbEntity> updateLogEvent(@PathVariable("traceId") String traceId, @PathVariable("spanId") String spanId, @PathVariable("timestamp") String timestamp, @RequestBody LogEntry logEntry) {
+        logger.info("Request to update a log event with traceId: {}, spanId: {}, timestamp: {}", traceId, spanId, timestamp);
+        try {
+            ScyllaDbEntity.LogKey pk = new ScyllaDbEntity.LogKey(traceId, spanId, timestamp);
+            Optional<ScyllaDbEntity> logEventData = logEventRepository.findById(pk);
 
-        ScyllaDbEntity.LogKey pk = new ScyllaDbEntity.LogKey(traceId, spanId, timestamp);
-
-        Optional<ScyllaDbEntity> logEventData = logEventRepository.findById(pk);
-
-        if (logEventData.isPresent()) {
-            ScyllaDbEntity logEventToUpdate = logEventData.get();
-            logEventToUpdate.setLevel(logEntry.getLevel());
-            logEventToUpdate.setMessage(logEntry.getMessage());
-            logEventToUpdate.setResourceId(logEntry.getResourceId());
-            logEventToUpdate.setCommit(logEntry.getCommit());
-            logEventToUpdate.setMetadata(logEntry.getMetadata());
-            return new ResponseEntity<>(logEventRepository.save(logEventToUpdate), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            if (logEventData.isPresent()) {
+                ScyllaDbEntity logEventToUpdate = logEventData.get();
+                logEventToUpdate.setLevel(logEntry.getLevel());
+                logEventToUpdate.setMessage(logEntry.getMessage());
+                logEventToUpdate.setResourceId(logEntry.getResourceId());
+                logEventToUpdate.setCommit(logEntry.getCommit());
+                logEventToUpdate.setMetadata(logEntry.getMetadata());
+                return new ResponseEntity<>(logEventRepository.save(logEventToUpdate), HttpStatus.OK);
+            } else {
+                logger.info("Log event not found with traceId: {}, spanId: {}, timestamp: {}", traceId, spanId, timestamp);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            logger.error("Error updating log event with traceId: {}, spanId: {}, timestamp: {}", traceId, spanId, timestamp, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // DELETE: Delete a log event by Trace ID
-    @DeleteMapping("/log-events/{traceId}/{spanId}")
-    public ResponseEntity<HttpStatus> deleteLogEvents(@PathVariable("traceId") String traceId,
-                                                      @PathVariable("spanId") String spanId) {
+    // Delete a log event by Trace ID and Span ID
+    @DeleteMapping("/{traceId}/{spanId}")
+    public ResponseEntity<HttpStatus> deleteLogEvents(@PathVariable("traceId") String traceId, @PathVariable("spanId") String spanId) {
+        logger.info("Request to delete log events with traceId: {}, spanId: {}", traceId, spanId);
         try {
             logEventRepository.deleteByTraceIdAndSpanId(traceId, spanId);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
+            logger.error("Error deleting log events with traceId: {}, spanId: {}", traceId, spanId, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Delete all log events
+    @DeleteMapping
+    public ResponseEntity<HttpStatus> deleteAllLogEvents() {
+        logger.info("Request to delete all log events");
+        try {
+            logEventRepository.deleteAll();
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            logger.error("Error deleting all log events", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
 
-    // DELETE: Delete all log events
-    @DeleteMapping("/log-events")
-    public ResponseEntity<HttpStatus> deleteAllLogEvents() {
+    // Search logs with multiple filter options and regex support
+    @GetMapping("/search")
+    public ResponseEntity<List<ScyllaDbEntity>> searchLogs(@RequestParam(required = false) String level, @RequestParam(required = false) String resourceId, @RequestParam(required = false) String regex) {
+        logger.info("Search request received - level: {}, resourceId: {}, regex: {}", level, resourceId, regex);
         try {
-            logEventRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            List<ScyllaDbEntity> logs = logEventRepository.findByLevelAndResourceId(level, resourceId);
+            logger.debug("Logs filtered by level and resourceId, count: {}", logs.size());
+
+            if (regex != null && !regex.isEmpty()) {
+                Pattern pattern = Pattern.compile(regex);
+                logs = logs.stream().filter(log -> pattern.matcher(log.getMessage()).find()).collect(Collectors.toList());
+                logger.debug("Logs filtered by regex, count: {}", logs.size());
+            }
+            return new ResponseEntity<>(logs, HttpStatus.OK);
         } catch (Exception e) {
+            logger.error("Error during search", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -163,31 +194,6 @@ public class LogController {
         List<ScyllaDbEntity> logs = logEventRepository.findByTimestampRange(start, end);
         return new ResponseEntity<>(logs, HttpStatus.OK);
     }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<ScyllaDbEntity>> searchLogs(
-            @RequestParam(required = false) String level,
-            @RequestParam(required = false) String resourceId,
-            @RequestParam(required = false) String regex) {
-        logger.info("Search request received - level: {}, resourceId: {}, regex: {}", level, resourceId, regex);
-        try {
-            List<ScyllaDbEntity> logs = logEventRepository.findByLevelAndResourceId(level, resourceId);
-            logger.debug("Logs filtered by level and resourceId, count: {}", logs.size());
-
-            if (regex != null && !regex.isEmpty()) {
-                Pattern pattern = Pattern.compile(regex);
-                logs = logs.stream()
-                        .filter(log -> pattern.matcher(log.getMessage()).find())
-                        .collect(Collectors.toList());
-                logger.debug("Logs filtered by regex, count: {}", logs.size());
-            }
-            return new ResponseEntity<>(logs, HttpStatus.OK);
-        } catch (Exception e) {
-            logger.error("Error during search", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
 
 }
 
