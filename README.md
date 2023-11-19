@@ -63,12 +63,6 @@ Dive into our system's architecture, where every component plays a critical role
 ## Contributing
 Got ideas? Found bugs? Contributions are not just welcomed, they're celebrated! Open a pull request or issue and join in on the fun of improving this project.
 
-## Usage
-
-Instructions on how to use or contribute to the project.
-
-## Contributing
-
 We welcome and value contributions to this project. By contributing, you agree to the following terms:
 
 1. **License Compatibility**: Your contributions must be compatible with the License under which this project is released.
