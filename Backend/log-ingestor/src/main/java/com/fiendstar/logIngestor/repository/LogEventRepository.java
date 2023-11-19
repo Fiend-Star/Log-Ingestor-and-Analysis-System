@@ -3,10 +3,10 @@ package com.fiendstar.logIngestor.repository;
 import com.fiendstar.logIngestor.model.ScyllaDbEntity;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, ScyllaDbEntity.LogKey> {
@@ -28,8 +28,14 @@ public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, 
     @Query("SELECT * FROM logKeySpace.logs_by_timestamp WHERE timestamp >= ?0 AND timestamp <= ?1")
     List<ScyllaDbEntity> findByTimestampRange(ZonedDateTime start, ZonedDateTime end);
 
+    @Query("SELECT * FROM logs WHERE traceId = :traceId ALLOW FILTERING")
+    List<ScyllaDbEntity> findByTraceId(@Param("traceId") String traceId);
 
-    Optional<ScyllaDbEntity> findById(String traceId);
+    @Query("DELETE FROM logs WHERE traceId = :traceId AND spanId = :spanId")
+    void deleteByTraceIdAndSpanId(@Param("traceId") String traceId, @Param("spanId") String spanId);
 
-    void deleteById(String traceId);
+    @Query("SELECT * FROM logs WHERE level = :level AND resourceId = :resourceId ALLOW FILTERING")
+    List<ScyllaDbEntity> findByLevelAndResourceId(@Param("level") String level, @Param("resourceId") String resourceId);
+
+
 }

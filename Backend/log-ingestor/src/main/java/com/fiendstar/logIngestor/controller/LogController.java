@@ -11,8 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @RestController
 public class LogController {
@@ -22,18 +25,6 @@ public class LogController {
 
     @Autowired
     private LogService logService;
-
-//    @PostMapping
-//    public ResponseEntity<String> ingestLog(@RequestBody LogEntry logEntry) {
-//        try {
-//            logService.processLogEntry(logEntry);
-//            return ResponseEntity.ok("Log Received: " + logEntry.getMessage());
-//        } catch (Exception e) {
-//            return ResponseEntity.internalServerError().body("Error processing log");
-//        }
-//    }
-
-
 
     @Autowired
     private LogEventRepository logEventRepository;
@@ -59,12 +50,18 @@ public class LogController {
 
     // GET: Retrieve a single log event by Trace ID
     @GetMapping("/log-events/{traceId}")
-    public ResponseEntity<ScyllaDbEntity> getLogEventByTraceId(@PathVariable("traceId") String traceId) {
-        Optional<ScyllaDbEntity> logEventData = logEventRepository.findById(traceId);
-        return logEventData.map(logEvent -> new ResponseEntity<>(logEvent, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<List<ScyllaDbEntity>> getLogEventsByTraceId(@PathVariable("traceId") String traceId) {
+        try {
+            // Assuming you have a method in your repository to find by traceId
+            List<ScyllaDbEntity> logEvents = logEventRepository.findByTraceId(traceId);
+            if (logEvents.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(logEvents, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-
 
     // POST: Create a new log event
     @PostMapping
@@ -102,15 +99,17 @@ public class LogController {
     }
 
     // DELETE: Delete a log event by Trace ID
-    @DeleteMapping("/log-events/{traceId}")
-    public ResponseEntity<HttpStatus> deleteLogEvent(@PathVariable("traceId") String traceId) {
+    @DeleteMapping("/log-events/{traceId}/{spanId}")
+    public ResponseEntity<HttpStatus> deleteLogEvents(@PathVariable("traceId") String traceId,
+                                                      @PathVariable("spanId") String spanId) {
         try {
-            logEventRepository.deleteById(traceId);
+            logEventRepository.deleteByTraceIdAndSpanId(traceId, spanId);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     // DELETE: Delete all log events
     @DeleteMapping("/log-events")
@@ -122,6 +121,73 @@ public class LogController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/by-level/{level}")
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByLevel(@PathVariable String level) {
+        List<ScyllaDbEntity> logs = logEventRepository.findByLevel(level);
+        return new ResponseEntity<>(logs, HttpStatus.OK);
+    }
+
+    @GetMapping("/by-message")
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByMessageContaining(@RequestParam String message) {
+        List<ScyllaDbEntity> logs = logEventRepository.findByMessageContaining(message);
+        return new ResponseEntity<>(logs, HttpStatus.OK);
+    }
+
+    @GetMapping("/by-resource/{resourceId}")
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByResourceId(@PathVariable String resourceId) {
+        List<ScyllaDbEntity> logs = logEventRepository.findByResourceId(resourceId);
+        return new ResponseEntity<>(logs, HttpStatus.OK);
+    }
+
+    @GetMapping("/by-message-ignore-case")
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByMessageContainingIgnoreCase(@RequestParam String message) {
+        List<ScyllaDbEntity> logs = logEventRepository.findByMessageContainingIgnoreCase(message);
+        return new ResponseEntity<>(logs, HttpStatus.OK);
+    }
+
+    @GetMapping("/by-traceId-spanId-timestamp-range")
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByTraceIdAndSpanIdAndTimestampRange(
+            @RequestParam String traceId,
+            @RequestParam String spanId,
+            @RequestParam ZonedDateTime start,
+            @RequestParam ZonedDateTime end) {
+        List<ScyllaDbEntity> logs = logEventRepository.findByTraceIdAndSpanIdAndTimestampRange(traceId, spanId, start, end);
+        return new ResponseEntity<>(logs, HttpStatus.OK);
+    }
+
+    @GetMapping("/by-timestamp-range")
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByTimestampRange(
+            @RequestParam ZonedDateTime start,
+            @RequestParam ZonedDateTime end) {
+        List<ScyllaDbEntity> logs = logEventRepository.findByTimestampRange(start, end);
+        return new ResponseEntity<>(logs, HttpStatus.OK);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ScyllaDbEntity>> searchLogs(
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String resourceId,
+            @RequestParam(required = false) String regex) {
+        logger.info("Search request received - level: {}, resourceId: {}, regex: {}", level, resourceId, regex);
+        try {
+            List<ScyllaDbEntity> logs = logEventRepository.findByLevelAndResourceId(level, resourceId);
+            logger.debug("Logs filtered by level and resourceId, count: {}", logs.size());
+
+            if (regex != null && !regex.isEmpty()) {
+                Pattern pattern = Pattern.compile(regex);
+                logs = logs.stream()
+                        .filter(log -> pattern.matcher(log.getMessage()).find())
+                        .collect(Collectors.toList());
+                logger.debug("Logs filtered by regex, count: {}", logs.size());
+            }
+            return new ResponseEntity<>(logs, HttpStatus.OK);
+        } catch (Exception e) {
+            logger.error("Error during search", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 }
 
