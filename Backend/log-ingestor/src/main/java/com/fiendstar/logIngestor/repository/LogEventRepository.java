@@ -1,5 +1,6 @@
 package com.fiendstar.logIngestor.repository;
 
+import com.fiendstar.logIngestor.model.LogKey;
 import com.fiendstar.logIngestor.model.ScyllaDbEntity;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
@@ -9,7 +10,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Repository
-public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, ScyllaDbEntity.LogKey> {
+public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, LogKey> {
 
     @Query("SELECT * FROM logs WHERE level = ?0 ALLOW FILTERING")
     List<ScyllaDbEntity> findByLevel(String level);

@@ -28,13 +28,13 @@ echo "ScyllaDB is now ready."
 #cqlsh -e "ALTER ROLE cassandra WITH SUPERUSER = true;"
 
 # Create keyspace
-cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 3 };"
+cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 1 };"
 
 # Create table
 cqlsh -e "CREATE TABLE IF NOT EXISTS logKeySpace.logs (
     traceId text,
     spanId text,
-    timestamp text,
+    timestamp timestamp,
     level text,
     message text,
     resourceId text,
@@ -48,7 +48,10 @@ cqlsh -e "INSERT INTO logKeySpace.logs (traceId, spanId, timestamp, level, messa
 
 # Create Indexes
 cqlsh -e "CREATE INDEX IF NOT EXISTS idx_level ON logKeySpace.logs (level);"
-cqlsh -e "CREATE INDEX IF NOT EXISTS idx_resourceId ON logKeySpace.logs (resourceId);"
+cqlsh -e "CREATE INDEX IF NOT EXISTS idx_resource_id ON logKeySpace.logs (resource_id);"
+cqlsh -e "CREATE INDEX IF NOT EXISTS idx_commit ON logKeySpace.logs (commit);"
+cqlsh -e "CREATE INDEX IF NOT EXISTS idx_parent_resource_id ON logKeySpace.logs (parent_resource_id);"
+
 
 # Create Materialized View
 cqlsh -e "CREATE MATERIALIZED VIEW IF NOT EXISTS logKeySpace.logs_by_timestamp AS SELECT * FROM logKeySpace.logs WHERE timestamp IS NOT NULL AND traceId IS NOT NULL AND spanId IS NOT NULL PRIMARY KEY (timestamp, traceId, spanId) WITH CLUSTERING ORDER BY (traceId ASC, spanId ASC);"
@@ -57,7 +60,7 @@ cqlsh -e "CREATE MATERIALIZED VIEW IF NOT EXISTS logKeySpace.logs_by_timestamp A
 cqlsh -f /cql_log_data.cql
 
 # Set consistency level to QUORUM
-cqlsh -e "CONSISTENCY QUORUM"
+cqlsh -e "CONSISTENCY ONE"
 
 # Keep the container running
 tail -f /dev/null

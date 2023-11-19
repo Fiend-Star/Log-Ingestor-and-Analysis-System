@@ -4,8 +4,10 @@ FROM node:18 as build
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json, then install dependencies
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json* ./
+
+# Install dependencies
 RUN npm install
 
 # Copy the rest of your app's source code
@@ -14,8 +16,8 @@ COPY . .
 # Build the app
 RUN npm run build
 
-# Use a specific version of Nginx
-FROM nginx:1.21
+# Use a specific version of Nginx for the final image
+FROM nginx:latest
 
 # Set working directory to Nginx asset directory
 WORKDIR /usr/share/nginx/html
@@ -29,6 +31,7 @@ COPY --from=build /app/build .
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Expose port 5001
 EXPOSE 5001
 
 # Start Nginx
