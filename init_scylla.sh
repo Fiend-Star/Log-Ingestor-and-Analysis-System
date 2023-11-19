@@ -10,7 +10,7 @@ echo 2048576 > /proc/sys/fs/aio-max-nr
 scylla_io_setup
 
 # Start Scylla in the background with additional options if needed
-/docker-entrypoint.py --overprovisioned 1 --smp 3 --developer-mode=1 &
+/docker-entrypoint.py --overprovisioned 1 --smp 1 --developer-mode=1 &
 
 #/usr/bin/scylla --developer-mode=1 &
 
@@ -23,10 +23,12 @@ done
 
 echo "ScyllaDB is now ready."
 
-
+#cqlsh -e "CREATE ROLE IF NOT EXISTS cassandra WITH PASSWORD = 'cassandra' AND LOGIN = TRUE;"
+#
+#cqlsh -e "ALTER ROLE cassandra WITH SUPERUSER = true;"
 
 # Create keyspace
-cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'replication_factor' : 3};"
+cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 3 };"
 
 # Create table
 cqlsh -e "CREATE TABLE IF NOT EXISTS logKeySpace.logs (

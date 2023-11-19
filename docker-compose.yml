@@ -31,6 +31,8 @@ services:
       - ./scylla/scylla.yaml:/conf/scylla.yaml
       - ./scylla/cassandra-rackdc.properties.dc1:/conf/cassandra-rackdc.properties
       - ./scylla/logTestData/cql_log_data.cql:/cql_log_data.cql
+      - scylla-data1:/var/lib/scylla
+      - scylla-commitlog1:/var/lib/scylla/commitlog
     entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status || exit 1" ]
@@ -47,7 +49,10 @@ services:
     container_name: scylla-node2
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 3
+    command: --seeds=scylla-node1 --overprovisioned 1 --smp 1
+    volumes:
+      - scylla-data2:/var/lib/scylla
+      - scylla-commitlog2:/var/lib/scylla/commitlog
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
@@ -64,7 +69,10 @@ services:
     container_name: scylla-node3
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 3
+    command: --seeds=scylla-node1 --overprovisioned 1 --smp 1
+    volumes:
+      - scylla-data3:/var/lib/scylla
+      - scylla-commitlog3:/var/lib/scylla/commitlog
     healthcheck:
       test: [ "CMD-SHELL", "nodetool status || exit 1" ]
       interval: 30s
@@ -215,12 +223,12 @@ services:
       - custom_network
 
 volumes:
-#  scylla-data1:
-#  scylla-data2:
-#  scylla-data3:
-#  scylla-commitlog1:
-#  scylla-commitlog2:
-#  scylla-commitlog3:
+  scylla-data1:
+  scylla-data2:
+  scylla-data3:
+  scylla-commitlog1:
+  scylla-commitlog2:
+  scylla-commitlog3:
   postgres-data:
   elasticsearch-data:
 

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package log;
+
+message LogMessage {
+  string level = 1;
+  string message = 2;
+  string resourceId = 3;
+  string timestamp = 4;
+  string traceId = 5;
+  string spanId = 6;
+  string commit = 7;
+  map<string, string> metadata = 8;
+}
