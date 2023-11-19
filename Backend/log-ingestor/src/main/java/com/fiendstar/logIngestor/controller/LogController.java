@@ -55,7 +55,6 @@ public class LogController {
 
         try {
             List<ScyllaDbEntity> events = logEventRepository.findAll();
-            logger.info("getAllLogEvents - Retrieved events: {}", events);
 
             if (events.isEmpty()) {
                 logger.info("getAllLogEvents - No content found");
