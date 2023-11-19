@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/logs")
 public class LogController {
 
     private static final Logger logger = LoggerFactory.getLogger(LogController.class);
@@ -34,40 +33,14 @@ public class LogController {
 //        }
 //    }
 
-    @PostMapping
-    public ResponseEntity<String> ingestLog(@RequestBody byte[] logData) {
-        try {
-            logService.processLogData(logData);
-            return ResponseEntity.ok("Log Received");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error processing log");
-        }
-    }
+
 
     @Autowired
     private LogEventRepository logEventRepository;
 
     // GET: Retrieve all log events
-    @GetMapping("/log-events")
+    @GetMapping
     public ResponseEntity<List<ScyllaDbEntity>> getAllLogEvents() {
-        logger.info("getAllLogEvents - Entry into the method");
-
-        try {
-            List<ScyllaDbEntity> events = logEventRepository.findAll();
-
-            if (events.isEmpty()) {
-                logger.info("getAllLogEvents - No content found");
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            return new ResponseEntity<>(events, HttpStatus.OK);
-        } catch (Exception e) {
-            logger.error("Error retrieving log events: ", e);
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/log-event")
-    public ResponseEntity<List<ScyllaDbEntity>> getAllLogEvent() {
         logger.info("getAllLogEvents - Entry into the method");
 
         try {
@@ -94,10 +67,9 @@ public class LogController {
 
 
     // POST: Create a new log event
-    @PostMapping("/log-events")
+    @PostMapping
     public ResponseEntity<ScyllaDbEntity> createLogEvent(@RequestBody LogEntry logEntry) {
         try {
-            // Assuming logEntry is an object from which you're fetching these details
             ScyllaDbEntity.LogKey pk = new ScyllaDbEntity.LogKey(logEntry.getTraceId(), logEntry.getSpanId(), logEntry.getTimestamp());
             ScyllaDbEntity newLogEvent = new ScyllaDbEntity(pk, logEntry.getLevel(), logEntry.getMessage(), logEntry.getResourceId(), logEntry.getCommit(), logEntry.getMetadata());
             ScyllaDbEntity savedLogEvent = logEventRepository.save(newLogEvent);
