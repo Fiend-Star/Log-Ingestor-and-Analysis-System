@@ -27,7 +27,7 @@ RUN ls -lrt /usr/src/myapp
 WORKDIR /usr/src/myapp
 
 # Run Maven install to build your application
-RUN mvn clean install -DskipTests
+RUN mvn clean install
 
 # Stage 2: Setup the runtime environment
 FROM openjdk:17

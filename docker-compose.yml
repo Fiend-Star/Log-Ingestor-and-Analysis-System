@@ -95,7 +95,7 @@ services:
       - scylla-data3:/var/lib/scylla
       - scylla-commitlog3:/var/lib/scylla/commitlog
     healthcheck:
-      test: ["CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -eq 3 ]; then exit 0; else exit 1; fi'"]
+      test: [ "CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -eq 3 ]; then exit 0; else exit 1; fi'" ]
       interval: 30s
       timeout: 60s
       retries: 10
@@ -136,7 +136,7 @@ services:
   postgres:
     restart: on-failure
     image: postgres
-    command: ["postgres", "-c", "port=5431"]
+    command: [ "postgres", "-c", "port=5431" ]
     environment:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
@@ -206,7 +206,7 @@ services:
       zookeeper:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server=localhost:9091 || exit 1"]
+      test: [ "CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server=localhost:9091 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5

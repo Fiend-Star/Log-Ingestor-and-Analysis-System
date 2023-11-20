@@ -21,6 +21,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.7.0</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -136,9 +146,9 @@
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.6.1</version>
-<!--                <configuration>-->
-<!--                    <protocExecutable>/usr/local/bin/protoc</protocExecutable>-->
-<!--                </configuration>-->
+                <!--                <configuration>-->
+                <!--                    <protocExecutable>/usr/local/bin/protoc</protocExecutable>-->
+                <!--                </configuration>-->
                 <executions>
                     <execution>
                         <goals>

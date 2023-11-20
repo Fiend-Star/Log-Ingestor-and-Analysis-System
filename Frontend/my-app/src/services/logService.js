@@ -25,7 +25,7 @@ export const getAllLogEvents = (traceId, spanId, fromTimestampStr, toTimestampSt
         }
     });
 
-    return apiClient.get('/all', { params });
+    return apiClient.get('/all', {params});
 };
 
 
