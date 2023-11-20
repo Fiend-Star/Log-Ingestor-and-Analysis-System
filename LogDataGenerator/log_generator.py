@@ -41,18 +41,9 @@ def timestamp_within_30_days():
     random_timestamp = thirty_days_ago + datetime.timedelta(seconds=random.randint(0, 30 * 24 * 3600))
     return random_timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
-# Function to write a batch of insert statements to the file
-def write_batch(file, batch):
-    file.write("BEGIN UNLOGGED BATCH\n")
-    for line in batch:
-        file.write(line + '\n')
-    file.write("APPLY BATCH;\n")
-
 # Generating and saving the log entries
 file_path = '/mnt/data/updated_realistic_log_entries.txt'
 with open(file_path, 'w') as file:
-    batch_size = 500  # Batch size
-    batch = []
     trace_id = ""
     for i in range(400000):  # Generating 400,000 records
         message = random.choice(sample_messages)
@@ -64,15 +55,7 @@ with open(file_path, 'w') as file:
         resource_id = f'server-{random.randint(1000, 9999)}'
         metadata = realistic_metadata()
 
-        line = f"INSERT INTO logKeySpace.logs (traceId, spanId, timestamp, level, message, resourceId, commit, metadata) VALUES ('{trace_id}', '{span_id}', '{timestamp}', '{level}', '{message}', '{resource_id}', '{commit}', {metadata});"
-        batch.append(line)
-        if len(batch) >= batch_size:
-            write_batch(file, batch)
-            batch.clear()
-
-    # Write any remaining records
-    if batch:
-        write_batch(file, batch)
+        line = f"INSERT INTO logKeySpace.logs (traceId, spanId, timestamp, level, message, resourceId, commit, metadata) VALUES ('{trace_id}', '{span_id}', '{timestamp}', '{level}', '{message}', '{resource_id}', '{commit}', {metadata});\n"
+        file.write(line)
 
 file_path
-

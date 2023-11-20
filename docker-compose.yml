@@ -27,7 +27,7 @@ services:
 
   scylla-node1:
     restart: on-failure
-    image: scylladb/scylla:5.2.0
+    image: scylladb/scylla:5.2.10
     container_name: scylla-node1
     privileged: true
     networks:
@@ -59,7 +59,7 @@ services:
 
   scylla-node2:
     restart: on-failure
-    image: scylladb/scylla:5.2.0
+    image: scylladb/scylla:5.2.10
     container_name: scylla-node2
     networks:
       - custom_network
@@ -86,7 +86,7 @@ services:
 
   scylla-node3:
     restart: on-failure
-    image: scylladb/scylla:5.2.0
+    image: scylladb/scylla:5.2.10
     container_name: scylla-node3
     networks:
       - custom_network

@@ -30,14 +30,6 @@ check_all_nodes_up() {
     [[ $up_nodes -eq $expected_nodes ]]
 }
 
-# Wait for all nodes to be up and running
-until check_all_nodes_up
-do
-    echo "Waiting for all ScyllaDB nodes to be operational..."
-    sleep 10
-done
-
-echo "All ScyllaDB nodes are up and operational."
 
 # Create keyspace
 cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 1 };"
@@ -70,8 +62,18 @@ cqlsh -e "CONSISTENCY LOCAL_ONE"
 #cqlsh -e "CONSISTENCY LOCAL_QUORUM"
 
 ## Add large amounts of data
-## Ensure that /cql_log_data.cql is optimized for batch inserts
-#cqlsh -f /cql_log_data.cql
+# Ensure that /cql_log_data.cql is optimized for batch inserts
+cqlsh -f /cql_log_data.cql
 
+# Wait for all nodes to be up and running
+until check_all_nodes_up
+do
+    echo "Waiting for all ScyllaDB nodes to be operational..."
+    sleep 10
+done
+
+echo "All ScyllaDB nodes are up and operational."
+
+nodetool repair logKeySpace
 # Keep the container running
 tail -f /dev/null
