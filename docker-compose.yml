@@ -16,6 +16,14 @@ services:
       interval: 20s
       timeout: 10s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 500M
 
   scylla-node1:
     restart: on-failure
@@ -39,6 +47,14 @@ services:
       interval: 30s
       timeout: 60s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
     depends_on:
       kafka:
         condition: service_healthy
@@ -58,9 +74,18 @@ services:
       interval: 30s
       timeout: 60s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
     depends_on:
       scylla-node1:
         condition: service_healthy
+
 
 
   scylla-node3:
@@ -78,6 +103,14 @@ services:
       interval: 30s
       timeout: 60s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
     depends_on:
       scylla-node1:
         condition: service_healthy
@@ -101,6 +134,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
 
   elasticsearch:
     restart: on-failure
@@ -121,6 +162,14 @@ services:
       interval: 15s
       timeout: 15s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
 
 
   kafka:
@@ -143,7 +192,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
 
   redis:
     restart: on-failure
@@ -157,6 +213,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 500M
 
   log-ingestor:
     restart: on-failure
@@ -168,15 +232,23 @@ services:
       - ./Backend/log-ingestor:/usr/src/myapp
     networks:
       - custom_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
     depends_on:
       postgres:
         condition: service_healthy
       scylla-node1:
         condition: service_healthy
-      scylla-node2:
-        condition: service_healthy
-      scylla-node3:
-        condition: service_healthy
+#      scylla-node2:
+#        condition: service_healthy
+#      scylla-node3:
+#        condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
@@ -195,15 +267,23 @@ services:
       - ./Backend/query-interface:/usr/src/myapp
     networks:
       - custom_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
     depends_on:
       postgres:
         condition: service_healthy
       scylla-node1:
         condition: service_healthy
-      scylla-node2:
-        condition: service_healthy
-      scylla-node3:
-        condition: service_healthy
+#      scylla-node2:
+#        condition: service_healthy
+#      scylla-node3:
+#        condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
@@ -221,6 +301,14 @@ services:
       - query-interface
     networks:
       - custom_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
 
 volumes:
   scylla-data1:

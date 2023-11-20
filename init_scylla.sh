@@ -48,9 +48,8 @@ cqlsh -e "INSERT INTO logKeySpace.logs (traceId, spanId, timestamp, level, messa
 
 # Create Indexes
 cqlsh -e "CREATE INDEX IF NOT EXISTS idx_level ON logKeySpace.logs (level);"
-cqlsh -e "CREATE INDEX IF NOT EXISTS idx_resource_id ON logKeySpace.logs (resource_id);"
+cqlsh -e "CREATE INDEX IF NOT EXISTS idx_resource_id ON logKeySpace.logs (resourceId);"
 cqlsh -e "CREATE INDEX IF NOT EXISTS idx_commit ON logKeySpace.logs (commit);"
-cqlsh -e "CREATE INDEX IF NOT EXISTS idx_parent_resource_id ON logKeySpace.logs (parent_resource_id);"
 
 
 # Create Materialized View

@@ -1,25 +1,37 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:3000/', // Replace with your API base URL
-    timeout: 4000000 // 40 seconds timeout
+    baseURL: 'http://localhost:3000/',
+    timeout: 4000000
 });
 
-export const getAllLogEventsNonPaged = () => {
+
+export const getAllLogEvents = (traceId, spanId, fromTimestamp, toTimestamp, page, size) => {
     console.log('getAllLogEvents');
+
+    const params = {
+        traceId: traceId || '', // Set empty string if undefined
+        spanId: spanId || '',   // Set empty string if undefined
+        fromTimestamp,
+        toTimestamp,
+        page,
+        size
+    };
+
+    // Remove undefined or null values from params
+    Object.keys(params).forEach(key => {
+        if (params[key] == null) {
+            delete params[key];
+        }
+    });
+
+    return apiClient.get('/all', { params });
+};
+
+
+export const getAllLogEventsNonPaged = () => {
+    console.log('getAllLogEventsNonPaged');
 
     // Use the apiClient for the request
     return apiClient.get('/all-nonpaged');
-};
-
-export const getAllLogEvents = (page = 0, size = 10000) => {
-    console.log('getAllLogEvents');
-
-    // Include pagination parameters in the API request
-    const params = {
-        page: page,
-        size: size
-    };
-
-    return apiClient.get('/all', { params });
 };

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,14 +57,28 @@ public class LogController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Page<ScyllaDbEntity>> getAllLogEvents(Pageable pageable) {
-        logger.info("Request to fetch all log events");
-
+    public ResponseEntity<Slice<ScyllaDbEntity>> getAllLogEvents(
+            Pageable pageable,
+            @RequestParam(required = false) String traceId,
+            @RequestParam(required = false) String spanId,
+            @RequestParam(required = false) String fromTimestampStr,
+            @RequestParam(required = false) String toTimestampStr) {
+        logger.info("Request to fetch all log events - pageable: {}, traceId: '{}', spanId: '{}', fromTimestampStr: '{}', toTimestampStr: '{}'",
+                pageable, traceId, spanId, fromTimestampStr, toTimestampStr);
         try {
+            Instant fromTimestamp = fromTimestampStr != null ? Instant.parse(fromTimestampStr + ":00.000Z") : null;
+            Instant toTimestamp = toTimestampStr != null ? Instant.parse(toTimestampStr + ":00.000Z") : Instant.now();
 
-            Page<ScyllaDbEntity> events = (Page<ScyllaDbEntity>) logEventRepository.findAll(pageable);
+            Slice<ScyllaDbEntity> events;
+            if (isNullOrEmpty(traceId) && isNullOrEmpty(spanId)) {
+                // Fetch all logs within the timestamp range if both are null or empty
+                events = logEventRepository.findByKeyTimestampBetween(fromTimestamp, toTimestamp, pageable);
+            } else {
+                // Fetch logs based on either or both traceId and spanId, and timestamps
+                events = logEventRepository.findByKeyTraceIdOrKeySpanIdAndKeyTimestampBetween(traceId, spanId, fromTimestamp, toTimestamp, pageable);
+            }
 
-            if (events.isEmpty()) {
+            if (!events.hasNext()) {
                 logger.info("No log events found");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
@@ -73,6 +88,11 @@ public class LogController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    private boolean isNullOrEmpty(String str) {
+        return str == null || str.isEmpty();
+    }
+
 
     // Retrieve log events by Trace ID
     @GetMapping("/{traceId}")
