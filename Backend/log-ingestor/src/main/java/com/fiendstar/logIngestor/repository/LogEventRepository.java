@@ -4,13 +4,30 @@ import com.fiendstar.logIngestor.model.LogKey;
 import com.fiendstar.logIngestor.model.ScyllaDbEntity;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 
 @Repository
 public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, LogKey> {
+
+//    Slice<ScyllaDbEntity> findAllBetweenTimestamps(Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
+
+    Slice<ScyllaDbEntity> findByKeyTimestampBetween(Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
+
+    Slice<ScyllaDbEntity> findByKeyTraceIdOrKeySpanIdAndKeyTimestampBetween(
+            String traceId, String spanId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
+
+    @Query("SELECT * FROM logs WHERE traceId = ?0 AND spanId = ?1 AND timestamp <= ?2 ALLOW FILTERING")
+    Slice<ScyllaDbEntity> findByTraceIdAndSpanIdBetweenTimestamps(String traceId, String spanId, Instant toTimestamp, Pageable pageable);
+
+    @Query("SELECT * FROM logs WHERE traceId = ?0 AND spanId = ?1 AND timestamp >= ?2 AND timestamp <= ?3 ALLOW FILTERING")
+    Slice<ScyllaDbEntity> findByTraceIdAndSpanIdBetweenTimestamps(String traceId, String spanId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
 
     @Query("SELECT * FROM logs WHERE level = ?0 ALLOW FILTERING")
     List<ScyllaDbEntity> findByLevel(String level);
