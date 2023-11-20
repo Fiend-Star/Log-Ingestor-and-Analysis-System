@@ -79,7 +79,6 @@ All Rights Reserved
 
 This project is our pride and joy - a digital fortress where only authorized collaborators wield the power to modify or distribute. Remember, written permission is your golden ticket here!
 
-Permission for code testing is aligned with [these guidelines](https://dyte.notion.site/SDE-1-and-SDE-Intern-Assignment-6b7a7f324dc0450381b0fdb771a8ec40).
 
 All rights reserved.
 
