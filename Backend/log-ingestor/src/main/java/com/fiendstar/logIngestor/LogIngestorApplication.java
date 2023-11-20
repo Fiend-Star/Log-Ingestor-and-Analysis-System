@@ -16,9 +16,13 @@ public class LogIngestorApplication {
         SpringApplication.run(LogIngestorApplication.class, args);
 
         // Example log messages
-        logger.info("This is an INFO message.");
-        logger.error("This is an ERROR message.");
-        logger.warn("This is a WARN message.");
+        logger.info("**** These are just to test the logger ****");
+        logger.error("     This is an ERROR message.");
+        logger.warn("     This is a WARN message.");
+        logger.info("     This is an INFO message.");
+        logger.debug("     This is a DEBUG message.");
+        logger.trace("     This is a TRACE message.");
+        logger.info("**** These are just to test the logger ****");
     }
 
 }

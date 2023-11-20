@@ -1,0 +1,3 @@
+cqlsh localhost 9042 -f .\cql_log_data.cql
+terminal after pip install cqlsh via admin cmd
+```

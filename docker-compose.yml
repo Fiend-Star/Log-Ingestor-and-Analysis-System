@@ -32,8 +32,6 @@ services:
     privileged: true
     networks:
       - custom_network
-    ports:
-      - "9042:9042"
     volumes:
       - ./init_scylla.sh:/init_scylla.sh
       - ./scylla/scylla.yaml:/conf/scylla.yaml
@@ -65,7 +63,7 @@ services:
     container_name: scylla-node2
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 2
+    command: --seeds=scylla-node1 --smp 2 --overprovisioned 1
     volumes:
       - scylla-data2:/var/lib/scylla
       - scylla-commitlog2:/var/lib/scylla/commitlog
@@ -92,7 +90,7 @@ services:
     container_name: scylla-node3
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 2
+    command: --seeds=scylla-node1 --smp 2 --overprovisioned 1
     volumes:
       - scylla-data3:/var/lib/scylla
       - scylla-commitlog3:/var/lib/scylla/commitlog
@@ -112,7 +110,26 @@ services:
     depends_on:
       scylla-node1:
         condition: service_healthy
-        
+
+  load_balancer:
+    image: haproxy:latest
+    container_name: scylla_lb
+    ports:
+      - "9042:9042"
+    networks:
+      - custom_network
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    healthcheck:
+      test: [ "CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - scylla-node1
+      - scylla-node2
+      - scylla-node3
+
   postgres:
     restart: on-failure
     image: postgres
@@ -241,19 +258,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      scylla-node1:
-        condition: service_healthy
-      scylla-node2:
-        condition: service_healthy
-      scylla-node3:
-        condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
       redis:
         condition: service_healthy
-
+      load_balancer:
+        condition: service_healthy
 
   query-interface:
     build:
@@ -287,6 +299,8 @@ services:
       elasticsearch:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      load_balancer:
         condition: service_healthy
 
   frontend:

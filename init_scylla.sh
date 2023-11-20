@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# This script is executed when the container is started.
-chmod +x /init_scylla.sh
-
 # Set AIO max number of events
 echo 2048576 > /proc/sys/fs/aio-max-nr
 
@@ -10,9 +7,9 @@ echo 2048576 > /proc/sys/fs/aio-max-nr
 scylla_io_setup
 
 # Start Scylla in the background with additional options if needed
-/docker-entrypoint.py --overprovisioned 1 --smp 1 --developer-mode=1 &
+/docker-entrypoint.py --overprovisioned 1 --smp 2 &
 
-#/usr/bin/scylla --developer-mode=1 &
+#--developer-mode=1 &
 
 # Wait for ScyllaDB to be ready
 until cqlsh -e "describe cluster"
@@ -23,12 +20,29 @@ done
 
 echo "ScyllaDB is now ready."
 
-#cqlsh -e "CREATE ROLE IF NOT EXISTS cassandra WITH PASSWORD = 'cassandra' AND LOGIN = TRUE;"
-#
-#cqlsh -e "ALTER ROLE cassandra WITH SUPERUSER = true;"
+# Function to check if all nodes are up
+check_all_nodes_up() {
+    # Assuming a 3-node cluster
+    local expected_nodes=3
+    local up_nodes
+
+    up_nodes=$(nodetool status | grep '^UN' | wc -l)
+    [[ $up_nodes -eq $expected_nodes ]]
+}
+
+# Wait for all nodes to be up and running
+until check_all_nodes_up
+do
+    echo "Waiting for all ScyllaDB nodes to be operational..."
+    sleep 10
+done
+
+echo "All ScyllaDB nodes are up and operational."
 
 # Create keyspace
 cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 1 };"
+
+# cqlsh -e "CREATE KEYSPACE IF NOT EXISTS logKeySpace WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 2 };"
 
 # Create table
 cqlsh -e "CREATE TABLE IF NOT EXISTS logKeySpace.logs (
@@ -43,23 +57,21 @@ cqlsh -e "CREATE TABLE IF NOT EXISTS logKeySpace.logs (
     PRIMARY KEY ((traceId, spanId), timestamp)
 ) WITH CLUSTERING ORDER BY (timestamp DESC);"
 
-# Insert Sample Data
-cqlsh -e "INSERT INTO logKeySpace.logs (traceId, spanId, timestamp, level, message, resourceId, commit, metadata) VALUES ('abc-xyz-123', 'span-456', '2023-09-15T08:00:00Z', 'error', 'Failed to connect to DB', 'server-1234', '5e5342f', {'parentResourceId': 'server-0987'});"
-
 # Create Indexes
 cqlsh -e "CREATE INDEX IF NOT EXISTS idx_level ON logKeySpace.logs (level);"
 cqlsh -e "CREATE INDEX IF NOT EXISTS idx_resource_id ON logKeySpace.logs (resourceId);"
 cqlsh -e "CREATE INDEX IF NOT EXISTS idx_commit ON logKeySpace.logs (commit);"
 
-
 # Create Materialized View
 cqlsh -e "CREATE MATERIALIZED VIEW IF NOT EXISTS logKeySpace.logs_by_timestamp AS SELECT * FROM logKeySpace.logs WHERE timestamp IS NOT NULL AND traceId IS NOT NULL AND spanId IS NOT NULL PRIMARY KEY (timestamp, traceId, spanId) WITH CLUSTERING ORDER BY (traceId ASC, spanId ASC);"
 
-# add 100,000 rows worth of logs
-cqlsh -f /cql_log_data.cql
+cqlsh -e "CONSISTENCY LOCAL_ONE"
 
-# Set consistency level to QUORUM
-cqlsh -e "CONSISTENCY ONE"
+#cqlsh -e "CONSISTENCY LOCAL_QUORUM"
+
+## Add large amounts of data
+## Ensure that /cql_log_data.cql is optimized for batch inserts
+#cqlsh -f /cql_log_data.cql
 
 # Keep the container running
 tail -f /dev/null
