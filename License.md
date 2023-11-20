@@ -4,8 +4,6 @@ Welcome to Log Analysis System!
 
 ## License
 
-Permission for code testing is aligned with [these guidelines](https://dyte.notion.site/SDE-1-and-SDE-Intern-Assignment-6b7a7f324dc0450381b0fdb771a8ec40).
-
 This project is released under this License, which promotes collaboration and fairness among contributors and users. By using, modifying, or distributing this project, you agree to the following terms:
 
 1. **Use for Non-Commercial Purposes**: Contributors with accepted contributions are granted a non-exclusive, revocable, worldwide license to use this project and its associated files for non-commercial purposes, subject to the conditions outlined in this license.
