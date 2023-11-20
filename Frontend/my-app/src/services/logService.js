@@ -6,14 +6,14 @@ const apiClient = axios.create({
 });
 
 
-export const getAllLogEvents = (traceId, spanId, fromTimestamp, toTimestamp, page, size) => {
+export const getAllLogEvents = (traceId, spanId, fromTimestampStr, toTimestampStr, page, size) => {
     console.log('getAllLogEvents');
 
     const params = {
         traceId: traceId || '', // Set empty string if undefined
         spanId: spanId || '',   // Set empty string if undefined
-        fromTimestamp,
-        toTimestamp,
+        fromTimestampStr,
+        toTimestampStr,
         page,
         size
     };

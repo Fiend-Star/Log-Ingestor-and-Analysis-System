@@ -63,9 +63,9 @@ public class LogController {
             @RequestParam(required = false) String spanId,
             @RequestParam(required = false) String fromTimestampStr,
             @RequestParam(required = false) String toTimestampStr) {
-        logger.info("Request to fetch all log events - pageable: {}, traceId: '{}', spanId: '{}', fromTimestampStr: '{}', toTimestampStr: '{}'",
-                pageable, traceId, spanId, fromTimestampStr, toTimestampStr);
+        logger.info("Request to fetch all log events - pageable: {}, traceId: '{}', spanId: '{}', fromTimestampStr: '{}', toTimestampStr: '{}'", pageable, traceId, spanId, fromTimestampStr, toTimestampStr);
         try {
+
             Instant fromTimestamp = fromTimestampStr != null ? Instant.parse(fromTimestampStr + ":00.000Z") : Instant.EPOCH; // Default to the start of the epoch
             Instant toTimestamp = toTimestampStr != null ? Instant.parse(toTimestampStr + ":00.000Z") : Instant.now(); // Default to current time
 

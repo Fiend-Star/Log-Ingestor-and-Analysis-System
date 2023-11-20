@@ -16,10 +16,8 @@ import java.util.List;
 @Repository
 public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, LogKey> {
 
-//    Slice<ScyllaDbEntity> findAllBetweenTimestamps(Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
 
     Slice<ScyllaDbEntity> findByKeyTimestampBetween(Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
-
     Slice<ScyllaDbEntity> findByKeyTraceIdOrKeySpanIdAndKeyTimestampBetween(
             String traceId, String spanId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
 

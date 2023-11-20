@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import { getAllLogEvents } from '../services/logService';
-import { AgGridReact } from 'ag-grid-react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
+import {getAllLogEvents} from '../services/logService';
+import {AgGridReact} from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-material.css';
-import { Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography } from '@mui/material';
+import {Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography} from '@mui/material';
 
 const LogView = () => {
-    const [pageSize, setPageSize] = useState(10);
+    const [gridSize, setGridSize] = useState(1000);
     const [rowData, setRowData] = useState([]);
     const [hasMoreData, setHasMoreData] = useState(false);
     const [isDataFetched, setIsDataFetched] = useState(false);
@@ -20,18 +20,18 @@ const LogView = () => {
 
     // Styles defined using useMemo for optimization
     const styles = useMemo(() => ({
-        gridStyle: { height: '400px', width: '100%', marginTop: '20px' },
-        paperStyle: { padding: '20px', margin: '20px 0' },
-        inputStyle: { minWidth: 180 }
+        gridStyle: {height: '400px', width: '100%', marginTop: '20px'},
+        paperStyle: {padding: '20px', margin: '20px 0'},
+        inputStyle: {minWidth: 180}
     }), []);
-
 
     const fetchData = useCallback(async (loadMore = false) => {
         try {
-            console.log('Fetch Data called', { traceId, spanId, fromTimestamp, toTimestamp, page, pageSize });
+            console.log('Fetch Data called', {traceId, spanId, fromTimestamp, toTimestamp, page, gridSize});
             const nextPage = loadMore ? page + 1 : page;
-            const response = await getAllLogEvents(traceId, spanId, fromTimestamp, toTimestamp, nextPage, pageSize);
-            setRowData(prevData => loadMore ? [...prevData, ...response.data.logs] : response.data.logs);
+            const response = await getAllLogEvents(traceId, spanId, fromTimestamp, toTimestamp, nextPage, gridSize);
+            console.log("response", response);
+            setRowData(prevData => loadMore ? [...prevData, ...response.data.content] : response.data.content);
             setIsDataFetched(true);
             setHasMoreData(response.data.hasMore);
             if (loadMore) {
@@ -40,7 +40,7 @@ const LogView = () => {
         } catch (error) {
             console.error('Error fetching logs:', error);
         }
-    }, [traceId, spanId, fromTimestamp, toTimestamp, page, pageSize]);
+    }, [traceId, spanId, fromTimestamp, toTimestamp, page, gridSize]);
 
 
     const resetData = useCallback(() => {
@@ -74,6 +74,10 @@ const LogView = () => {
     const onTraceIdChange = e => setTraceId(e.target.value);
     const onSpanIdChange = e => setSpanId(e.target.value);
 
+    // Grid Size Selection Handler
+    const handleGridSizeChange = (event) => {
+        setGridSize(event.target.value);
+    };
 
     const columns = useMemo(() => [
         {
@@ -157,7 +161,20 @@ const LogView = () => {
                     <Select value="" onChange={(e) => setTimeRange(e.target.value)} label="Time Range">
                         <MenuItem value={15}>Last 15 Minutes</MenuItem>
                         <MenuItem value={60}>Last 1 Hour</MenuItem>
+                        <MenuItem value={60 * 6}>Last 6 Hour</MenuItem>
+                        <MenuItem value={60 * 12}>Last 12 Hour</MenuItem>
                         <MenuItem value={60 * 24}>Last 24 Hours</MenuItem>
+                        <MenuItem value={60 * 24 * 7}>Last 7 Days</MenuItem>
+                        <MenuItem value={60 * 24 * 14}>Last 14 Days</MenuItem>
+                    </Select>
+                </FormControl>
+                <FormControl style={{minWidth: 180}}>
+                    <InputLabel>Grid Size</InputLabel>
+                    <Select value={gridSize} onChange={handleGridSizeChange} label="Grid Size">
+                        <MenuItem value={1500}>1500 Rows</MenuItem>
+                        <MenuItem value={2000}>2000 Rows</MenuItem>
+                        <MenuItem value={5000}>5000 Rows</MenuItem>
+                        <MenuItem value={10000}>10000 Rows</MenuItem>
                     </Select>
                 </FormControl>
                 <Button onClick={setNow} variant="contained">Now</Button>
@@ -171,13 +188,13 @@ const LogView = () => {
                     columnDefs={columns}
                     rowData={rowData}
                     animateRows={true}
-                    paginationPageSize={pageSize}
+                    paginationPageSize={gridSize}  // Use gridSize here
                     sortable={true}
                     filter={true}
                 />
             </div>
             {isDataFetched && hasMoreData && (
-                <Button onClick={() => fetchData(true)} variant="contained" style={{ marginTop: '10px' }}>
+                <Button onClick={() => fetchData(true)} variant="contained" style={{marginTop: '10px'}}>
                     Load More Logs
                 </Button>
             )}
