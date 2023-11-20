@@ -65,7 +65,7 @@ services:
     container_name: scylla-node2
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 1
+    command: --seeds=scylla-node1 --overprovisioned 1 --smp 2
     volumes:
       - scylla-data2:/var/lib/scylla
       - scylla-commitlog2:/var/lib/scylla/commitlog
@@ -86,15 +86,13 @@ services:
       scylla-node1:
         condition: service_healthy
 
-
-
   scylla-node3:
     restart: on-failure
     image: scylladb/scylla:5.2.0
     container_name: scylla-node3
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --overprovisioned 1 --smp 1
+    command: --seeds=scylla-node1 --overprovisioned 1 --smp 2
     volumes:
       - scylla-data3:/var/lib/scylla
       - scylla-commitlog3:/var/lib/scylla/commitlog
@@ -245,10 +243,10 @@ services:
         condition: service_healthy
       scylla-node1:
         condition: service_healthy
-#      scylla-node2:
-#        condition: service_healthy
-#      scylla-node3:
-#        condition: service_healthy
+      scylla-node2:
+        condition: service_healthy
+      scylla-node3:
+        condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
@@ -280,10 +278,10 @@ services:
         condition: service_healthy
       scylla-node1:
         condition: service_healthy
-#      scylla-node2:
-#        condition: service_healthy
-#      scylla-node3:
-#        condition: service_healthy
+      scylla-node2:
+        condition: service_healthy
+      scylla-node3:
+        condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
