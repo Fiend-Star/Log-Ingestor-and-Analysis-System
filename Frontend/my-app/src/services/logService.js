@@ -11,7 +11,7 @@ export const getAllLogEvents = (traceId, spanId, fromTimestampStr, toTimestampSt
 
     const params = {
         traceId: traceId || '', // Set empty string if undefined
-        spanId: spanId || '',   // Set empty string if undefined
+        spanId: spanId || '',
         fromTimestampStr,
         toTimestampStr,
         page,
