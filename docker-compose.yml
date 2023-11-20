@@ -95,7 +95,7 @@ services:
       - scylla-data3:/var/lib/scylla
       - scylla-commitlog3:/var/lib/scylla/commitlog
     healthcheck:
-      test: [ "CMD-SHELL", "nodetool status || exit 1" ]
+      test: ["CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -eq 3 ]; then exit 0; else exit 1; fi'"]
       interval: 30s
       timeout: 60s
       retries: 10
@@ -126,9 +126,12 @@ services:
       timeout: 10s
       retries: 3
     depends_on:
-      - scylla-node1
-      - scylla-node2
-      - scylla-node3
+      scylla-node1:
+        condition: service_healthy
+      scylla-node2:
+        condition: service_healthy
+      scylla-node3:
+        condition: service_healthy
 
   postgres:
     restart: on-failure
