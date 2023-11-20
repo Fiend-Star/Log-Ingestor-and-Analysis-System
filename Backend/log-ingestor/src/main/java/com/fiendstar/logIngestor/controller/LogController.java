@@ -66,8 +66,8 @@ public class LogController {
         logger.info("Request to fetch all log events - pageable: {}, traceId: '{}', spanId: '{}', fromTimestampStr: '{}', toTimestampStr: '{}'",
                 pageable, traceId, spanId, fromTimestampStr, toTimestampStr);
         try {
-            Instant fromTimestamp = fromTimestampStr != null ? Instant.parse(fromTimestampStr + ":00.000Z") : null;
-            Instant toTimestamp = toTimestampStr != null ? Instant.parse(toTimestampStr + ":00.000Z") : Instant.now();
+            Instant fromTimestamp = fromTimestampStr != null ? Instant.parse(fromTimestampStr + ":00.000Z") : Instant.EPOCH; // Default to the start of the epoch
+            Instant toTimestamp = toTimestampStr != null ? Instant.parse(toTimestampStr + ":00.000Z") : Instant.now(); // Default to current time
 
             Slice<ScyllaDbEntity> events;
             if (isNullOrEmpty(traceId) && isNullOrEmpty(spanId)) {
