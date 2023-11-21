@@ -65,14 +65,14 @@ cqlsh -e "CONSISTENCY LOCAL_ONE"
 # Ensure that /cql_log_data.cql is optimized for batch inserts
 cqlsh -f /cql_log_data.cql
 
-# Wait for all nodes to be up and running
-#until check_all_nodes_up
-#do
-#    echo "Waiting for all ScyllaDB nodes to be operational..."
-#    sleep 10
-#done
-#
-#echo "All ScyllaDB nodes are up and operational."
+Wait for all nodes to be up and running
+until check_all_nodes_up
+do
+    echo "Waiting for all ScyllaDB nodes to be operational..."
+    sleep 10
+done
+
+echo "All ScyllaDB nodes are up and operational."
 
 nodetool repair
 # Keep the container running
