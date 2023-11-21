@@ -19,10 +19,10 @@ import static org.springframework.data.cassandra.core.cql.PrimaryKeyType.PARTITI
 @NoArgsConstructor
 public class LogKey {
 
-    @PrimaryKeyColumn(name = "traceId", type = PARTITIONED)
+    @PrimaryKeyColumn(name = "traceid", type = PARTITIONED)
     private String traceId;
 
-    @PrimaryKeyColumn(name = "spanId", type = PARTITIONED)
+    @PrimaryKeyColumn(name = "spanid", type = PARTITIONED)
     private String spanId;
 
     @PrimaryKeyColumn(name = "timestamp", type = CLUSTERED, ordering = Ordering.DESCENDING)

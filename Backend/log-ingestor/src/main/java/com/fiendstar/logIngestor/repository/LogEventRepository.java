@@ -2,6 +2,7 @@ package com.fiendstar.logIngestor.repository;
 
 import com.fiendstar.logIngestor.model.LogKey;
 import com.fiendstar.logIngestor.model.ScyllaDbEntity;
+import org.springframework.data.cassandra.repository.AllowFiltering;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +19,15 @@ public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, 
 
 
     Slice<ScyllaDbEntity> findByKeyTimestampBetween(Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
-    Slice<ScyllaDbEntity> findByKeyTraceIdOrKeySpanIdAndKeyTimestampBetween(
-            String traceId, String spanId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
+
+    @AllowFiltering
+    Slice<ScyllaDbEntity> findByKeyTraceIdAndKeyTimestampBetween(
+            String traceId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
+
+    @AllowFiltering
+    Slice<ScyllaDbEntity> findByKeySpanIdAndKeyTimestampBetween(
+            String spanId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
+
 
     @Query("SELECT * FROM logs WHERE traceId = ?0 AND spanId = ?1 AND timestamp <= ?2 ALLOW FILTERING")
     Slice<ScyllaDbEntity> findByTraceIdAndSpanIdBetweenTimestamps(String traceId, String spanId, Instant toTimestamp, Pageable pageable);

@@ -24,7 +24,7 @@ public class ScyllaDbEntity {
     @Column("message")
     private String message;
 
-    @Column("resourceId")
+    @Column("resourceid")
     private String resourceId;
 
     @Column("commit")

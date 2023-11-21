@@ -8,11 +8,13 @@ import com.fiendstar.logIngestor.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -35,6 +37,12 @@ public class LogController {
 
     @Autowired
     private LogEventRepository logEventRepository;
+
+    @Autowired
+    private KafkaTemplate<String, ScyllaDbEntity> kafkaTemplate;
+
+    @Value("${kafka.topic.name}")
+    private String logCreationTopicName;
 
     // Retrieve all log events from the database
     @GetMapping("/all-non-paged")
@@ -74,12 +82,14 @@ public class LogController {
             Instant toTimestamp = toTimestampStr != null ? Instant.parse(toTimestampStr + ":00.000Z") : Instant.now(); // Default to current time
 
             Slice<ScyllaDbEntity> events;
+
             if (isNullOrEmpty(traceId) && isNullOrEmpty(spanId)) {
                 // Fetch all logs within the timestamp range if both are null or empty
                 events = logEventRepository.findByKeyTimestampBetween(fromTimestamp, toTimestamp, pageable);
             } else {
                 // Fetch logs based on either or both traceId and spanId, and timestamps
-                events = logEventRepository.findByKeyTraceIdOrKeySpanIdAndKeyTimestampBetween(traceId, spanId, fromTimestamp, toTimestamp, pageable);
+                List<ScyllaDbEntity> eventList = logService.findLogs(traceId, spanId, fromTimestamp, toTimestamp, pageable);
+                events = new SliceImpl<>(eventList, pageable, eventList.size() == pageable.getPageSize());
             }
 
             if (!events.hasNext()) {
@@ -120,18 +130,26 @@ public class LogController {
     // Create a new log event
     @PostMapping
     public ResponseEntity<ScyllaDbEntity> createLogEvent(@RequestBody LogEntry logEntry) {
-        logger.info("Request to create a new log event");
+        logger.info("Request to create a new log event: {}", logEntry);
         try {
-            Instant timeStmp = Instant.parse(logEntry.getTimestamp());
-            LogKey pk = new LogKey(logEntry.getTraceId(), logEntry.getSpanId(), timeStmp);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(logEntry.getTimestamp().replace(" ", "T")).append("Z");
+            LogKey pk = new LogKey(logEntry.getTraceId(), logEntry.getSpanId(), Instant.parse(sb.toString()));
             ScyllaDbEntity newLogEvent = new ScyllaDbEntity(pk, logEntry.getLevel(), logEntry.getMessage(), logEntry.getResourceId(), logEntry.getCommit(), logEntry.getMetadata());
-            ScyllaDbEntity savedLogEvent = logEventRepository.save(newLogEvent);
-            return new ResponseEntity<>(savedLogEvent, HttpStatus.CREATED);
+
+            // Send message to Kafka topic
+            kafkaTemplate.send(logCreationTopicName, newLogEvent);
+
+            logger.info("Log event sent to Kafka successfully: {}", newLogEvent);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+
         } catch (Exception e) {
-            logger.error("Error creating a new log event", e);
+            logger.error("Error creating a new log event for entry: {}", logEntry, e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     // Update an existing log event
     @PutMapping("/{traceId}/{spanId}/{timestamp}")
