@@ -2,7 +2,6 @@ version: '3.8'
 
 services:
 
-
   scylla-node1:
     restart: on-failure
     image: scylladb/scylla:5.2.10
@@ -26,10 +25,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '3.0'
+          #cpus: '3.0'
           memory: 4000M
-    environment:
-      - SCYLLA_NUMA_NODE=0
+#    environment:
+#      - SCYLLA_NUMA_NODE=0
 
   scylla-node2:
     restart: on-failure
@@ -37,7 +36,7 @@ services:
     container_name: scylla-node2
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --smp 2 --overprovisioned 1
+    command: --seeds=scylla-node1 #--smp 2 --overprovisioned 1
     volumes:
       - scylla-data2:/var/lib/scylla
       - scylla-commitlog2:/var/lib/scylla/commitlog
@@ -49,10 +48,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '3.0'
+          #cpus: '3.0'
           memory: 3500M
-    environment:
-      - SCYLLA_NUMA_NODE=1
+#    environment:
+#      - SCYLLA_NUMA_NODE=1
     depends_on:
       scylla-node1:
         condition: service_healthy
@@ -63,7 +62,7 @@ services:
     container_name: scylla-node3
     networks:
       - custom_network
-    command: --seeds=scylla-node1 --smp 2 --overprovisioned 1
+    command: --seeds=scylla-node1 #--smp 2 --overprovisioned 1
     volumes:
       - scylla-data3:/var/lib/scylla
       - scylla-commitlog3:/var/lib/scylla/commitlog
@@ -75,10 +74,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '3.0'
+          #cpus: '3.0'
           memory: 3500M
-    environment:
-      - SCYLLA_NUMA_NODE=2
+#    environment:
+#      - SCYLLA_NUMA_NODE=2
     depends_on:
       scylla-node1:
         condition: service_healthy

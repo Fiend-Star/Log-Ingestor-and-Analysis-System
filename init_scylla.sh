@@ -7,7 +7,9 @@ echo 2048576 > /proc/sys/fs/aio-max-nr
 scylla_io_setup
 
 # Start Scylla in the background with additional options if needed
-/docker-entrypoint.py --overprovisioned 1 --smp 2 &
+/docker-entrypoint.py &
+
+#--overprovisioned 1 --smp 2 &
 
 #--developer-mode=1 &
 
