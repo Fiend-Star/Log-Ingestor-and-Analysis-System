@@ -30,6 +30,8 @@ services:
     image: scylladb/scylla:5.2.10
     container_name: scylla-node1
     privileged: true
+    ports:
+      - "9042:9042"
     networks:
       - custom_network
     volumes:

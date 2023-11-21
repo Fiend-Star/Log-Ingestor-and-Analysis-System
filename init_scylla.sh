@@ -66,13 +66,13 @@ cqlsh -e "CONSISTENCY LOCAL_ONE"
 cqlsh -f /cql_log_data.cql
 
 # Wait for all nodes to be up and running
-until check_all_nodes_up
-do
-    echo "Waiting for all ScyllaDB nodes to be operational..."
-    sleep 10
-done
-
-echo "All ScyllaDB nodes are up and operational."
+#until check_all_nodes_up
+#do
+#    echo "Waiting for all ScyllaDB nodes to be operational..."
+#    sleep 10
+#done
+#
+#echo "All ScyllaDB nodes are up and operational."
 
 nodetool repair logKeySpace
 # Keep the container running
