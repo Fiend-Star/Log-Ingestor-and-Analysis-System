@@ -30,8 +30,6 @@ services:
     image: scylladb/scylla:5.2.10
     container_name: scylla-node1
     privileged: true
-    ports:
-      - "9042:9042"
     networks:
       - custom_network
     volumes:
@@ -271,10 +269,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-#      load_balancer:
-#        condition: service_healthy
-      scylla-node1:
+      load_balancer:
         condition: service_healthy
+
 
   query-interface:
     build:
@@ -296,12 +293,6 @@ services:
           memory: 1G
     depends_on:
       postgres:
-        condition: service_healthy
-      scylla-node1:
-        condition: service_healthy
-      scylla-node2:
-        condition: service_healthy
-      scylla-node3:
         condition: service_healthy
       kafka:
         condition: service_healthy
