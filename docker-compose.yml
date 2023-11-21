@@ -41,7 +41,7 @@ services:
       - scylla-commitlog1:/var/lib/scylla/commitlog
     entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
     healthcheck:
-      test: [ "CMD-SHELL", "nodetool status || exit 1" ]
+      test: [ "CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -eq 1 ]; then exit 0; else exit 1; fi'" ]
       interval: 30s
       timeout: 60s
       retries: 10
@@ -269,7 +269,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      load_balancer:
+#      load_balancer:
+#        condition: service_healthy
+      scylla-node1:
         condition: service_healthy
 
   query-interface:
