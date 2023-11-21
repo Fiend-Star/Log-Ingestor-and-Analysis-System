@@ -74,6 +74,6 @@ cqlsh -f /cql_log_data.cql
 #
 #echo "All ScyllaDB nodes are up and operational."
 
-nodetool repair logKeySpace
+nodetool repair
 # Keep the container running
 tail -f /dev/null
