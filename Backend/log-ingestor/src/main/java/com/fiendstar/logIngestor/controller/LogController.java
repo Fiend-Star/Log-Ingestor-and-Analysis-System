@@ -66,6 +66,10 @@ public class LogController {
         logger.info("Request to fetch all log events - pageable: {}, traceId: '{}', spanId: '{}', fromTimestampStr: '{}', toTimestampStr: '{}'", pageable, traceId, spanId, fromTimestampStr, toTimestampStr);
         try {
 
+            logger.info(" pageable: {}", pageable);
+            logger.info(" traceId: {}", traceId);
+            logger.info(" spanId: {}", spanId);
+
             Instant fromTimestamp = fromTimestampStr != null ? Instant.parse(fromTimestampStr + ":00.000Z") : Instant.EPOCH; // Default to the start of the epoch
             Instant toTimestamp = toTimestampStr != null ? Instant.parse(toTimestampStr + ":00.000Z") : Instant.now(); // Default to current time
 
@@ -82,6 +86,9 @@ public class LogController {
                 logger.info("No log events found");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
+
+            logger.info("Returning {} log events", events.getNumberOfElements());
+
             return new ResponseEntity<>(events, HttpStatus.OK);
         } catch (Exception e) {
             logger.error("Error retrieving all log events", e);

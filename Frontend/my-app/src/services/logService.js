@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: '/log-ingestor/',
+    //baseURL: '/log-ingestor/',
+    baseURL: 'http://localhost:3000/',
     timeout: 4000000
 });
 

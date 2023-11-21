@@ -246,6 +246,8 @@ services:
       context: ./Backend/log-ingestor
     ports:
       - "3000:3000"
+    environment:
+      - SPRING_DEVTOOLS_LIVERELOAD_ENABLED=true
     volumes:
       - ./Backend/log-ingestor:/usr/src/myapp
     networks:

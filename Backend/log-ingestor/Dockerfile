@@ -26,6 +26,9 @@ RUN ls -lrt /usr/src/myapp
 # Set the working directory
 WORKDIR /usr/src/myapp
 
+ENV SPRING_DEVTOOLS_RESTART_ENABLED true
+ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED true
+
 # Run Maven install to build your application
 RUN mvn clean install
 
@@ -37,6 +40,9 @@ COPY --from=builder /usr/src/myapp/target/log-ingestor-0.0.1-SNAPSHOT.jar /usr/a
 
 # Set the working directory
 WORKDIR /usr/app
+
+ENV SPRING_DEVTOOLS_RESTART_ENABLED true
+ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED true
 
 # Set the entry point to run the JAR
 ENTRYPOINT ["java", "-jar", "log-ingestor.jar"]
