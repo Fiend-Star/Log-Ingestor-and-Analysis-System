@@ -17,6 +17,22 @@ import {
     Typography
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import { styled } from '@mui/material/styles';
+
+const AgFilter = styled('div')(({ theme }) => ({
+    border: '1px solid #ccc',
+    borderRadius: theme.shape.borderRadius,
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.background.paper,
+}));
+
+const AgFilterTextField = styled('div')(({ theme }) => ({
+    '& .MuiInputBase-root': {
+        borderRadius: theme.shape.borderRadius,
+        color: theme.palette.text.primary,
+    },
+}));
+
 
 
 const LogView = () => {
@@ -67,10 +83,15 @@ const LogView = () => {
 
     // Styles defined using useMemo for optimization
     const styles = useMemo(() => ({
-        gridStyle: {height: '400px', width: '100%', marginTop: '20px'},
+        gridStyle: {
+            height: '60vh', // 60% of the viewport height
+            width: '100%', // Full width of the container
+            marginTop: '20px'
+        },
         paperStyle: {padding: '20px', margin: '20px 0'},
         inputStyle: {minWidth: 180}
     }), []);
+
 
     const fetchData = useCallback(async (loadMore = false) => {
         try {
@@ -107,7 +128,7 @@ const LogView = () => {
 
     // Grid ready event handler
     const onGridReady = useCallback(params => {
-        params.api.sizeColumnsToFit();
+        //params.api.sizeColumnsToFit();
     }, []);
 
     // Utility functions
@@ -123,24 +144,49 @@ const LogView = () => {
     const onSpanIdChange = e => setSpanId(e.target.value);
 
 
+    const columns = useMemo(() => [
+        {
+            headerName: "Trace ID", field: "key.traceId", sortable: true, filter: true,
+        }, {
+            headerName: "Span ID", field: "key.spanId", sortable: true, filter: true,
+        }, {
+            headerName: "Timestamp", field: "key.timestamp", sortable: true, filter: 'agDateColumnFilter',
+        }, {
+            headerName: "Level", field: "level", sortable: true, filter: true,
+        }, {
+            headerName: "Message", field: "message", sortable: true, filter: true,
+        }, {
+            headerName: "Resource ID", field: "resourceId", sortable: true, filter: true,
+        }, {
+            headerName: "Commit", field: "commit", sortable: true, filter: true,
+        },{
+            headerName: "Metadata", field: "metadata",  cellRenderer: metadataRenderer,
+        }
 
-    const columns = useMemo(() => [{
-        headerName: "Trace ID", field: "key.traceId", sortable: true, filter: true,
-    }, {
-        headerName: "Span ID", field: "key.spanId", sortable: true, filter: true,
-    }, {
-        headerName: "Timestamp", field: "key.timestamp", sortable: true, filter: 'agDateColumnFilter',
-    }, {
-        headerName: "Level", field: "level", sortable: true, filter: true,
-    }, {
-        headerName: "Message", field: "message", sortable: true, filter: true,
-    }, {
-        headerName: "Resource ID", field: "resourceId", sortable: true, filter: true,
-    }, {
-        headerName: "Commit", field: "commit", sortable: true, filter: true,
-    }, {
-        headerName: "Metadata", field: "metadata", cellRenderer: 'agGroupCellRenderer',
-    },], []);
+    ], []);
+
+
+
+    // Regular function for metadataRenderer
+    function metadataRenderer(params) {
+        const metadata = params.value;
+
+        if (!metadata || (Object.keys(metadata).length === 0 && metadata.constructor === Object)) {
+            return <span>No Metadata Available</span>;
+        }
+
+        let flattenedMetadata = '';
+        for (const key in metadata) {
+            if (metadata.hasOwnProperty(key)) {
+                flattenedMetadata += `${key}: ${metadata[key]}; `;
+            }
+        }
+
+        flattenedMetadata = flattenedMetadata.replace(/, $/, '');
+
+        // Return a container with a specific class for styling
+        return <div className="metadata-cell">{flattenedMetadata}</div>;
+    }
 
 
     return (<Paper style={styles.paperStyle}>
@@ -151,14 +197,14 @@ const LogView = () => {
                 variant="outlined"
                 value={traceId}
                 onChange={onTraceIdChange} // Using onTraceIdChange here
-                style={{ minWidth: 180 }}
+                style={{minWidth: 180}}
             />
             <TextField
                 label="Span ID"
                 variant="outlined"
                 value={spanId}
                 onChange={onSpanIdChange} // Using onSpanIdChange here
-                style={{ minWidth: 180 }}
+                style={{minWidth: 180}}
             />
             <TextField
                 label="Start Time"
@@ -190,7 +236,8 @@ const LogView = () => {
                     <MenuItem value={60 * 24 * 14}>Last 14 Days</MenuItem>
                 </Select>
             </FormControl>
-            <FormControl variant="outlined" style={{ minWidth: 180, display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+            <FormControl variant="outlined"
+                         style={{minWidth: 180, display: 'flex', alignItems: 'center', flexDirection: 'row'}}>
                 <InputLabel id="grid-size-label" shrink>Grid Size</InputLabel>
                 {isEditingGridSize ? (
                     <TextField
@@ -201,17 +248,16 @@ const LogView = () => {
                         onBlur={toggleGridSizeEdit}
                         placeholder="Enter grid size"
                         autoFocus
-                        style={{ ...hideSpinButtonStyle, flex: 1 }} // Applied hideSpinButtonStyle here
+                        style={{...hideSpinButtonStyle, flex: 1}} // Applied hideSpinButtonStyle here
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <EditIcon onClick={toggleGridSizeEdit} />
+                                    <EditIcon onClick={toggleGridSizeEdit}/>
                                 </InputAdornment>
                             ),
                         }}
-                        InputLabelProps={{ shrink: true }}
+                        InputLabelProps={{shrink: true}}
                     />
-
                 ) : (
                     <>
                         <Select
@@ -219,15 +265,16 @@ const LogView = () => {
                             value={gridSize}
                             onChange={handleGridSizeChange}
                             label="Grid Size"
-                            style={{ flex: 1 }}
+                            style={{flex: 1}}
                         >
+                            <MenuItem value={100}>100 Rows</MenuItem>
                             <MenuItem value={1500}>1500 Rows</MenuItem>
                             <MenuItem value={2000}>2000 Rows</MenuItem>
                             <MenuItem value={5000}>5000 Rows</MenuItem>
                             <MenuItem value={10000}>10000 Rows</MenuItem>
                         </Select>
-                        <IconButton onClick={toggleGridSizeEdit} style={{ marginLeft: '8px' }}>
-                            <EditIcon />
+                        <IconButton onClick={toggleGridSizeEdit} style={{marginLeft: '8px'}}>
+                            <EditIcon/>
                         </IconButton>
                     </>
                 )}
@@ -237,7 +284,7 @@ const LogView = () => {
             <Button onClick={() => fetchData(false)} variant="contained">Fetch Logs</Button>
             <Button onClick={resetData} variant="contained">Reset</Button>
         </Box>
-        <div style={styles.gridStyle}>
+        <div className="grid-container" style={styles.gridStyle}>
             <AgGridReact
                 onGridReady={onGridReady}
                 ref={gridRef}

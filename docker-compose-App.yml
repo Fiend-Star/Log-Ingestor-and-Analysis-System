@@ -124,17 +124,12 @@ services:
           cpus: '1.0'
           memory: 1G
     depends_on:
-      postgres:
-        condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
       redis:
         condition: service_healthy
-#      load_balancer:
-#        condition: service_healthy
-
 
   query-interface:
     build:
@@ -155,16 +150,12 @@ services:
           cpus: '0.5'
           memory: 1G
     depends_on:
-      postgres:
-        condition: service_healthy
       kafka:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
       redis:
         condition: service_healthy
-#      load_balancer:
-#        condition: service_healthy
 
   frontend:
     restart: on-failure
