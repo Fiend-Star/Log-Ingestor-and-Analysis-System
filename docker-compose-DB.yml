@@ -25,10 +25,7 @@ services:
     deploy:
       resources:
         limits:
-          #cpus: '3.0'
           memory: 5500M
-  #    environment:
-  #      - SCYLLA_NUMA_NODE=0
 
   scylla-node2:
     restart: on-failure
@@ -36,7 +33,7 @@ services:
     container_name: scylla-node2
     networks:
       - custom_network
-    command: --seeds=scylla-node1 #--smp 2 --overprovisioned 1
+    command: --seeds=scylla-node1
     volumes:
       - scylla-data2:/var/lib/scylla
       - scylla-commitlog2:/var/lib/scylla/commitlog
@@ -48,10 +45,7 @@ services:
     deploy:
       resources:
         limits:
-          #cpus: '3.0'
           memory: 5500M
-    #    environment:
-    #      - SCYLLA_NUMA_NODE=1
     depends_on:
       scylla-node1:
         condition: service_healthy
@@ -62,7 +56,7 @@ services:
     container_name: scylla-node3
     networks:
       - custom_network
-    command: --seeds=scylla-node1 #--smp 2 --overprovisioned 1
+    command: --seeds=scylla-node1
     volumes:
       - scylla-data3:/var/lib/scylla
       - scylla-commitlog3:/var/lib/scylla/commitlog
@@ -74,10 +68,7 @@ services:
     deploy:
       resources:
         limits:
-          #cpus: '3.0'
           memory: 5500M
-    #    environment:
-    #      - SCYLLA_NUMA_NODE=2
     depends_on:
       scylla-node2:
         condition: service_healthy
@@ -88,7 +79,7 @@ services:
       container_name: scylla-node4
       networks:
         - custom_network
-      command: --seeds=scylla-node1 #--smp 2 --overprovisioned 1
+      command: --seeds=scylla-node1
       volumes:
         - scylla-data4:/var/lib/scylla
         - scylla-commitlog4:/var/lib/scylla/commitlog
@@ -100,10 +91,7 @@ services:
       deploy:
         resources:
           limits:
-            #cpus: '3.0'
             memory: 5500M
-      #    environment:
-      #      - SCYLLA_NUMA_NODE=2
       depends_on:
         scylla-node3:
           condition: service_healthy
@@ -114,7 +102,7 @@ services:
         container_name: scylla-node5
         networks:
           - custom_network
-        command: --seeds=scylla-node1 #--smp 2 --overprovisioned 1
+        command: --seeds=scylla-node1
         volumes:
           - scylla-data5:/var/lib/scylla
           - scylla-commitlog5:/var/lib/scylla/commitlog
@@ -126,10 +114,7 @@ services:
         deploy:
           resources:
             limits:
-              #cpus: '3.0'
               memory: 5500M
-        #    environment:
-        #      - SCYLLA_NUMA_NODE=2
         depends_on:
           scylla-node4:
             condition: service_healthy
