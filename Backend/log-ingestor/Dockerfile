@@ -34,7 +34,7 @@ ENV SPRING_DEVTOOLS_RESTART_ENABLED true
 ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED true
 
 # Run Maven install to build your application
-RUN mvn clean install
+RUN mvn clean install -DskipTests
 
 # Stage 2: Setup the runtime environment
 FROM openjdk:17

@@ -28,7 +28,6 @@ public interface LogEventRepository extends CassandraRepository<ScyllaDbEntity, 
     Slice<ScyllaDbEntity> findByKeySpanIdAndKeyTimestampBetween(
             String spanId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable);
 
-
     @Query("SELECT * FROM logs WHERE traceId = ?0 AND spanId = ?1 AND timestamp <= ?2 ALLOW FILTERING")
     Slice<ScyllaDbEntity> findByTraceIdAndSpanIdBetweenTimestamps(String traceId, String spanId, Instant toTimestamp, Pageable pageable);
 
