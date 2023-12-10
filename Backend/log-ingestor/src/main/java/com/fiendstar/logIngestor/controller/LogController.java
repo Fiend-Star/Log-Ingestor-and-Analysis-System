@@ -106,7 +106,7 @@ public class LogController {
     }
 
 
-    // Retrieve log events by Trace ID
+    // Retrieving log events by Trace ID
     @GetMapping("/{traceId}")
     public ResponseEntity<List<ScyllaDbEntity>> getLogEventsByTraceId(@PathVariable("traceId") String traceId) {
         logger.info("Request to fetch log events with traceId: {}", traceId);
@@ -257,85 +257,3 @@ public class LogController {
     }
 
 }
-
-/*
-______________________________
-
-@Autowired
-private LogEventService logEventService;
-
-@GetMapping
-public ResponseEntity<?> getAllLogEvents(){
-        return logEventService.getAllLogEvents();
-        }
-
-@GetMapping("/{traceId}")
-public ResponseEntity<?> getLogEventsByTraceId(@PathVariable String traceId){
-        return logEventService.getLogEventsByTraceId(traceId);
-        }
-
-@PostMapping
-public ResponseEntity<?> createLogEvent(@RequestBody LogEntry logEntry){
-        return logEventService.createLogEvent(logEntry);
-        }
-
-@PutMapping("/{traceId}/{spanId}/{timestamp}")
-public ResponseEntity<?> updateLogEvent(@PathVariable String traceId,
-@PathVariable String spanId,
-@PathVariable String timestamp,
-@RequestBody LogEntry logEntry){
-        return logEventService.updateLogEvent(traceId,spanId,timestamp,logEntry);
-        }
-
-@DeleteMapping("/{traceId}/{spanId}")
-public ResponseEntity<?> deleteLogEvents(@PathVariable String traceId,@PathVariable String spanId){
-        return logEventService.deleteLogEvents(traceId,spanId);
-        }
-
-@DeleteMapping
-public ResponseEntity<?> deleteAllLogEvents(){
-        return logEventService.deleteAllLogEvents();
-        }
-
-@GetMapping("/search")
-public ResponseEntity<?> searchLogs(@RequestParam(required = false) String level,
-@RequestParam(required = false) String resourceId,
-@RequestParam(required = false) String regex){
-        return logEventService.searchLogs(level,resourceId,regex);
-        }
-
-@GetMapping("/by-level/{level}")
-public ResponseEntity<?> getLogsByLevel(@PathVariable String level){
-        return logEventService.getLogsByLevel(level);
-        }
-
-@GetMapping("/by-message")
-public ResponseEntity<?> getLogsByMessageContaining(@RequestParam String message){
-        return logEventService.getLogsByMessageContaining(message);
-        }
-
-@GetMapping("/by-resource/{resourceId}")
-public ResponseEntity<?> getLogsByResourceId(@PathVariable String resourceId){
-        return logEventService.getLogsByResourceId(resourceId);
-        }
-
-@GetMapping("/by-message-ignore-case")
-public ResponseEntity<?> getLogsByMessageContainingIgnoreCase(@RequestParam String message){
-        return logEventService.getLogsByMessageContainingIgnoreCase(message);
-        }
-
-@GetMapping("/by-traceId-spanId-timestamp-range")
-public ResponseEntity<?> getLogsByTraceIdAndSpanIdAndTimestampRange(
-@RequestParam String traceId,
-@RequestParam String spanId,
-@RequestParam String start,
-@RequestParam String end){
-        return logEventService.getLogsByTraceIdAndSpanIdAndTimestampRange(traceId,spanId,start,end);
-        }
-
-@GetMapping("/by-timestamp-range")
-public ResponseEntity<?> getLogsByTimestampRange(@RequestParam String start,@RequestParam String end){
-        return logEventService.getLogsByTimestampRange(start,end);
-        }
-        }
-        */
