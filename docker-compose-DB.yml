@@ -1,0 +1,192 @@
+version: '3.8'
+
+services:
+
+  scylla-node1:
+    restart: on-failure
+    image: scylladb/scylla:5.2.10
+    container_name: scylla-node1
+    privileged: true
+    networks:
+      - custom_network
+    volumes:
+      - ./init_scylla.sh:/init_scylla.sh
+      - ./scylla/scylla.yaml:/conf/scylla.yaml
+      - ./scylla/cassandra-rackdc.properties.dc1:/conf/cassandra-rackdc.properties
+      - ./scylla/logTestData/cql_log_data.cql:/cql_log_data.cql
+      - scylla-data1:/var/lib/scylla
+      - scylla-commitlog1:/var/lib/scylla/commitlog
+    entrypoint: [ "/bin/bash", "/init_scylla.sh" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "nodetool status || exit 1" ]
+      interval: 30s
+      timeout: 60s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 5500M
+
+  scylla-node2:
+    restart: on-failure
+    image: scylladb/scylla:5.2.10
+    container_name: scylla-node2
+    networks:
+      - custom_network
+    command: --seeds=scylla-node1
+    volumes:
+      - scylla-data2:/var/lib/scylla
+      - scylla-commitlog2:/var/lib/scylla/commitlog
+    healthcheck:
+      test: [ "CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -ge 2 ]; then exit 0; else exit 1; fi'" ]
+      interval: 30s
+      timeout: 60s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 5500M
+    depends_on:
+      scylla-node1:
+        condition: service_healthy
+
+  scylla-node3:
+    restart: on-failure
+    image: scylladb/scylla:5.2.10
+    container_name: scylla-node3
+    networks:
+      - custom_network
+    command: --seeds=scylla-node1
+    volumes:
+      - scylla-data3:/var/lib/scylla
+      - scylla-commitlog3:/var/lib/scylla/commitlog
+    healthcheck:
+      test: [ "CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -ge 3 ]; then exit 0; else exit 1; fi'" ]
+      interval: 30s
+      timeout: 60s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 5500M
+    depends_on:
+      scylla-node2:
+        condition: service_healthy
+
+  scylla-node4:
+      restart: on-failure
+      image: scylladb/scylla:5.2.10
+      container_name: scylla-node4
+      networks:
+        - custom_network
+      command: --seeds=scylla-node1
+      volumes:
+        - scylla-data4:/var/lib/scylla
+        - scylla-commitlog4:/var/lib/scylla/commitlog
+      healthcheck:
+        test: [ "CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -ge 4 ]; then exit 0; else exit 1; fi'" ]
+        interval: 30s
+        timeout: 60s
+        retries: 10
+      deploy:
+        resources:
+          limits:
+            memory: 5500M
+      depends_on:
+        scylla-node3:
+          condition: service_healthy
+
+  scylla-node5:
+        restart: on-failure
+        image: scylladb/scylla:5.2.10
+        container_name: scylla-node5
+        networks:
+          - custom_network
+        command: --seeds=scylla-node1
+        volumes:
+          - scylla-data5:/var/lib/scylla
+          - scylla-commitlog5:/var/lib/scylla/commitlog
+        healthcheck:
+          test: [ "CMD-SHELL", "/bin/sh -c 'if [ $(nodetool status | grep -c \"^UN\") -ge 5 ]; then exit 0; else exit 1; fi'" ]
+          interval: 30s
+          timeout: 60s
+          retries: 10
+        deploy:
+          resources:
+            limits:
+              memory: 5500M
+        depends_on:
+          scylla-node4:
+            condition: service_healthy
+
+  load_balancer:
+    image: haproxy:latest
+    container_name: scylla_lb
+    ports:
+      - "9042:9042"
+    networks:
+      - custom_network
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    healthcheck:
+      test: [ "CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy/haproxy.cfg" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      scylla-node1:
+        condition: service_healthy
+      scylla-node2:
+        condition: service_healthy
+      scylla-node3:
+        condition: service_healthy
+      scylla-node4:
+        condition: service_healthy
+      scylla-node5:
+        condition: service_healthy
+
+  postgres:
+    restart: on-failure
+    image: postgres
+    command: [ "postgres", "-c", "port=5431" ]
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: metadataDB
+    ports:
+      - '5431:5431'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - custom_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U myuser -d metadataDB -p 5431" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 750M
+        reservations:
+          cpus: '0.5'
+          memory: 500M
+
+volumes:
+  scylla-data1:
+  scylla-data2:
+  scylla-data3:
+  scylla-commitlog1:
+  scylla-commitlog2:
+  scylla-commitlog3:
+  scylla-data4:
+  scylla-commitlog4:
+  scylla-data5:
+  scylla-commitlog5:
+  postgres-data:
+
+networks:
+  custom_network:
+    driver: bridge
+    external: true

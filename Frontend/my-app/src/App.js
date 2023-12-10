@@ -1,34 +1,23 @@
 import React, {useContext} from 'react';
 import './App.css';
-import { ThemeProvider } from './ThemeContext'; // Import your custom ThemeProvider
 import LogView from "./components/LogView";
 import {BrowserRouter as Router, Link as RouterLink, Route, Routes} from 'react-router-dom';
 import {AppBar, Box, Button, Container, IconButton, List, ListItem, Paper, Toolbar, Typography} from '@mui/material';
-import Brightness7Icon from '@mui/icons-material/Brightness7'; // Sun icon
-import Brightness4Icon from '@mui/icons-material/Brightness4'; // Moon icon
-import { ThemeContext } from './ThemeContext'; // Import ThemeContext
-
-
 
 function App() {
     return (
-        <ThemeProvider>
             <Router>
                 <Layout />
             </Router>
-        </ThemeProvider>
     );
 }
 
 function  Layout() {
-
-    const { darkMode, setDarkMode } = useContext(ThemeContext);
-
     return(
         <>
-            <AppBar position="static" color="primary" sx={{minHeight: 64}}>
+            <AppBar position="static" color="primary" sx={{ minHeight: 64 }}>
                 <Toolbar>
-                    <Typography variant="h6" sx={{flexGrow: 1}}>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
                         React Logs Viewer
                     </Typography>
                     <Button color="inherit" component={RouterLink} to="/">
@@ -37,19 +26,12 @@ function  Layout() {
                     <Button color="inherit" component={RouterLink} to="/logs">
                         View Logs
                     </Button>
-                    <IconButton
-                        color="inherit"
-                        onClick={() => setDarkMode(!darkMode)}
-                        aria-label="Toggle light/dark theme"
-                    >
-                        {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-                    </IconButton>
                 </Toolbar>
             </AppBar>
 
-            <Container sx={{mt: 8, mb: 12}}>
+            <Container sx={{ mt: 8, mb: 12 }}>
                 <Routes>
-                    <Route path="/logs" element={<LogView/>}/>
+                    <Route path="/logs" element={<LogView />} />
                 </Routes>
             </Container>
 

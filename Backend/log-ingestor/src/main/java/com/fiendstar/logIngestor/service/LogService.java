@@ -25,11 +25,6 @@ public class LogService {
     @Autowired
     private LogEventRepository logEventRepository;
 
-    public void processLogData(byte[] logData) throws Exception {
-        //LogEntry logEntry = LogEntry.parseFrom(logData);
-        //logRepository.save(convertToEntity(logEntry));
-    }
-
     public List<ScyllaDbEntity> findLogs(String traceId, String spanId, Instant fromTimestamp, Instant toTimestamp, Pageable pageable) {
 
         Slice<ScyllaDbEntity> traceIdResults = logEventRepository.findByKeyTraceIdAndKeyTimestampBetween(

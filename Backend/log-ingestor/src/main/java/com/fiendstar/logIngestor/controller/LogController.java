@@ -65,12 +65,7 @@ public class LogController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Slice<ScyllaDbEntity>> getAllLogEvents(
-            Pageable pageable,
-            @RequestParam(required = false) String traceId,
-            @RequestParam(required = false) String spanId,
-            @RequestParam(required = false) String fromTimestampStr,
-            @RequestParam(required = false) String toTimestampStr) {
+    public ResponseEntity<Slice<ScyllaDbEntity>> getAllLogEvents(Pageable pageable, @RequestParam(required = false) String traceId, @RequestParam(required = false) String spanId, @RequestParam(required = false) String fromTimestampStr, @RequestParam(required = false) String toTimestampStr) {
         logger.info("Request to fetch all log events - pageable: {}, traceId: '{}', spanId: '{}', fromTimestampStr: '{}', toTimestampStr: '{}'", pageable, traceId, spanId, fromTimestampStr, toTimestampStr);
         try {
 
@@ -111,7 +106,7 @@ public class LogController {
     }
 
 
-    // Retrieve log events by Trace ID
+    // Retrieving log events by Trace ID
     @GetMapping("/{traceId}")
     public ResponseEntity<List<ScyllaDbEntity>> getLogEventsByTraceId(@PathVariable("traceId") String traceId) {
         logger.info("Request to fetch log events with traceId: {}", traceId);
@@ -250,22 +245,15 @@ public class LogController {
     }
 
     @GetMapping("/by-traceId-spanId-timestamp-range")
-    public ResponseEntity<List<ScyllaDbEntity>> getLogsByTraceIdAndSpanIdAndTimestampRange(
-            @RequestParam String traceId,
-            @RequestParam String spanId,
-            @RequestParam ZonedDateTime start,
-            @RequestParam ZonedDateTime end) {
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByTraceIdAndSpanIdAndTimestampRange(@RequestParam String traceId, @RequestParam String spanId, @RequestParam ZonedDateTime start, @RequestParam ZonedDateTime end) {
         List<ScyllaDbEntity> logs = logEventRepository.findByTraceIdAndSpanIdAndTimestampRange(traceId, spanId, start, end);
         return new ResponseEntity<>(logs, HttpStatus.OK);
     }
 
     @GetMapping("/by-timestamp-range")
-    public ResponseEntity<List<ScyllaDbEntity>> getLogsByTimestampRange(
-            @RequestParam ZonedDateTime start,
-            @RequestParam ZonedDateTime end) {
+    public ResponseEntity<List<ScyllaDbEntity>> getLogsByTimestampRange(@RequestParam ZonedDateTime start, @RequestParam ZonedDateTime end) {
         List<ScyllaDbEntity> logs = logEventRepository.findByTimestampRange(start, end);
         return new ResponseEntity<>(logs, HttpStatus.OK);
     }
 
 }
-

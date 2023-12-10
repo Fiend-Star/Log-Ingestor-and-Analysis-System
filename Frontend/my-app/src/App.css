@@ -36,3 +36,21 @@
     transform: rotate(360deg);
   }
 }
+
+/* For smaller screens */
+@media (max-width: 600px) {
+  .grid-container {
+    height: 50vh; /* Adjust height for small screens */
+  }
+}
+
+/* For larger screens */
+@media (min-width: 601px) {
+  .grid-container {
+    height: 60vh; /* Adjust height for large screens */
+  }
+}
+
+.ag-filter {
+  background-color: rgba(255, 255, 255, 1); /* Fully opaque white background */
+}

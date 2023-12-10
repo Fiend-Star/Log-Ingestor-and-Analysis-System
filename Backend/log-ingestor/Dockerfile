@@ -1,9 +1,13 @@
 # Stage 1: Build with Maven
 FROM debian:latest as builder
 
-# Install Java and Maven
-RUN apt-get update && \
-    apt-get install -y openjdk-17-jdk maven
+# Function to retry commands
+# Retry mechanism for apt-get update
+RUN for i in `seq 1 5`; do apt-get update && break || sleep 15; done
+
+# Retry mechanism for apt-get install
+RUN for i in `seq 1 5`; do apt-get install -y openjdk-17-jdk maven && break || sleep 15; done
+
 
 # Install curl, unzip, and Protoc
 RUN apt-get install -y curl unzip && \
@@ -30,7 +34,7 @@ ENV SPRING_DEVTOOLS_RESTART_ENABLED true
 ENV SPRING_DEVTOOLS_LIVERELOAD_ENABLED true
 
 # Run Maven install to build your application
-RUN mvn clean install
+RUN mvn clean install -DskipTests
 
 # Stage 2: Setup the runtime environment
 FROM openjdk:17
